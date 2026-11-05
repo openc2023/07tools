@@ -10,160 +10,94 @@
 <link rel="apple-touch-icon" href="icons/studio7-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Serif+SC:wght@400;600&family=Noto+Serif+KR:wght@400;600&display=swap" rel="stylesheet">
-<script>
-  try { var t = localStorage.getItem("07tools-theme"); if (t) document.documentElement.dataset.theme = t; } catch (e) {}
-</script>
-<style>
-  :root {
-    --bg: #eef1f5; --bg-2: #e2e7ee; --ink: #0a0f1a; --ink-2: #4a5568; --ink-dim: #8a94a6;
-    --line: #cdd5e0; --accent: #1747e0; --sel: rgba(23,71,224,.18); --dot: rgba(10,15,26,.07);
-    --mono: "IBM Plex Mono", "Noto Serif SC", "Noto Serif KR", ui-monospace, monospace;
-    color-scheme: light;
-  }
-  :root[data-theme="dark"] {
-    --bg: #040508; --bg-2: #0a0d14; --ink: #e8eef7; --ink-2: #8b97ab; --ink-dim: #525d70;
-    --line: #182030; --accent: #3fa4ff; --sel: rgba(63,164,255,.3); --dot: rgba(110,160,255,.06);
-    color-scheme: dark;
-  }
-  * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
-  body {
-    margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
-    font: 400 15px/1.7 var(--mono);
-    background-image: radial-gradient(var(--dot) 1px, transparent 1px); background-size: 14px 14px;
-    transition: background-color .3s, color .3s;
-  }
-  ::selection { background: var(--sel); }
-  a { color: inherit; text-decoration: none; }
-  button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
-  :focus-visible { outline: 1px solid var(--accent); outline-offset: 3px; }
-
-  .bar {
-    position: sticky; top: 0; z-index: 2; height: 44px; display: flex; align-items: center; gap: 12px;
-    padding: 0 clamp(16px, 4vw, 40px); background: var(--bg); border-bottom: 1px solid var(--line);
-    font-size: 13px; color: var(--ink-2);
-  }
-  .bar .mark { width: 18px; height: 18px; flex: 0 0 auto; }
-  .bar .mark path { fill: var(--accent); }
-  .bar .name { font-weight: 600; color: var(--ink); }
-  .bar .spacer { flex: 1; }
-  .bar .home { color: var(--ink-dim); }
-  .bar .home:hover, .theme:hover { color: var(--accent); }
-  .langs { display: flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-  .langs button { padding: 3px 9px; font-size: 11px; color: var(--ink-dim); }
-  .langs button + button { border-left: 1px solid var(--line); }
-  .langs button.on { background: var(--accent); color: var(--bg); }
-  .theme { font-size: 15px; color: var(--ink-2); width: 20px; }
-
-  main { max-width: 1040px; margin: 0 auto; padding: clamp(40px, 9vh, 96px) clamp(16px, 4vw, 40px) 80px; }
-  .kicker { font-size: 12px; letter-spacing: .12em; color: var(--accent); }
-  h1 { margin: 10px 0 12px; font-size: clamp(34px, 6vw, 60px); line-height: 1.05; font-weight: 600; letter-spacing: -.01em; }
-  .lead { max-width: 620px; margin: 0; color: var(--ink-2); }
-
-  .grid { margin-top: 48px; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-  .card {
-    display: flex; flex-direction: column; gap: 10px; padding: 20px 20px 18px; min-height: 196px;
-    background: color-mix(in srgb, var(--bg) 80%, transparent); border: 1px solid var(--line); border-radius: 10px;
-    transition: border-color .2s, transform .2s;
-  }
-  a.card:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .card .top { display: flex; align-items: baseline; gap: 10px; }
-  .card h2 { margin: 0; font-size: 18px; font-weight: 600; }
-  .card .ver { font-size: 11px; color: var(--accent); border: 1px solid currentColor; border-radius: 4px; padding: 0 5px; }
-  .card p { margin: 0; color: var(--ink-2); font-size: 14px; flex: 1; }
-  .tags { display: flex; flex-wrap: wrap; gap: 6px; }
-  .tags span { font-size: 11px; color: var(--ink-dim); background: var(--bg-2); border-radius: 4px; padding: 1px 7px; }
-  .card .go { font-size: 12px; color: var(--accent); }
-  .card.soon { border-style: dashed; justify-content: center; align-items: center; text-align: center; color: var(--ink-dim); }
-  .card.soon p { flex: 0; color: var(--ink-dim); }
-
-  footer { margin-top: 64px; font-size: 12px; color: var(--ink-dim); }
-  footer a { border-bottom: 1px solid var(--line); }
-  footer a:hover { color: var(--accent); border-color: var(--accent); }
-
-  @media (max-width: 600px) {
-    .bar .home { display: none; }
-    .grid { grid-template-columns: 1fr; }
-  }
-</style>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Noto+Serif+SC:wght@400;600;900&family=Noto+Serif+KR:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=1">
+<link rel="stylesheet" href="tools.css?v=1">
 </head>
 <body>
-<header class="bar">
-  <svg class="mark" viewBox="0 0 1024 1024" aria-hidden="true"><path fill-rule="evenodd" d="M161.001,304 C234.469,180.024,367.89,104,512,104s277.531,76.024,350.999,200H161.001z M111.92,432H585L301.519,861.517 C154.021,772.693,78.16,600.836,111.92,432z M744,432h168.08c26.899,134.521-15.606,273.554-113.127,370.038 s-237.001,137.5-371.226,109.164L744,432z"/></svg>
-  <span class="name">07 Tools</span>
-  <span class="spacer"></span>
-  <a class="home" href="https://openc2023.github.io/web-media/" data-i="home">← STUDIO 7</a>
-  <div class="langs" role="group" aria-label="Language">
-    <button data-lang="zh">中</button><button data-lang="en">EN</button><button data-lang="ko">한</button>
+<canvas id="bgField" aria-hidden="true"></canvas>
+
+<div class="app" id="app" data-layout="scroll">
+  <div class="titlebar">
+    <div class="traffic"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+    <svg class="brand-mark" viewBox="0 0 1024 1024" aria-hidden="true"><path d="M161.001,304C234.469,180.024,367.89,104,512,104s277.531,76.024,350.999,200H161.001z M111.92,432H585L301.519,861.517C154.021,772.693,78.16,600.836,111.92,432z M744,432h168.08c26.899,134.521-15.606,273.554-113.127,370.038s-237.001,137.5-371.226,109.164L744,432z"/></svg>
+    <div class="title">STUDIO 7 <span class="dim">— ~/tools</span></div>
+    <div class="spacer"></div>
+    <div class="language-switch" id="languageSwitch" role="group" aria-label="Language">
+      <button type="button" data-lang="zh" lang="zh-CN" aria-label="中文" aria-pressed="false">中</button>
+      <button type="button" data-lang="en" lang="en" aria-label="English" aria-pressed="false">EN</button>
+      <button type="button" data-lang="ko" lang="ko" aria-label="한국어" aria-pressed="false">한</button>
+    </div>
+    <a class="home-btn" id="homeBtn" href="https://openc2023.github.io/web-media/" title="STUDIO 7">~/desk ↗</a>
+    <button class="theme-btn" id="themeBtn" title="toggle theme" aria-label="toggle theme">◐</button>
+    <div class="hint">press <b>/</b> to focus</div>
   </div>
-  <button class="theme" id="theme" aria-label="Toggle theme">◐</button>
-</header>
 
-<main>
-  <div class="kicker">// TOOLS</div>
-  <h1 data-i="title">小工具</h1>
-  <p class="lead" data-i="lead"></p>
-  <section class="grid" id="grid"></section>
-  <footer data-i="foot"></footer>
-</main>
+  <div class="tabs" id="tabs"></div>
 
-<script>
-/* 新增工具：在 TOOLS 里加一项，并把工具文件放到同名文件夹（例：sprite-align/index.html） */
-var TOOLS = [
-  {
-    slug: "sprite-align", name: "Sprite Align", ver: "v1.7",
-    desc: {
-      zh: "序列帧、精灵表、GIF、视频逐帧对齐，导出精灵表，可附带 TexturePacker JSON 与 Godot .tres。",
-      en: "Align sequences, sprite sheets, GIFs and video frame by frame, then export a sprite sheet with optional TexturePacker JSON and Godot .tres.",
-      ko: "시퀀스·스프라이트 시트·GIF·영상을 프레임별로 정렬하고 스프라이트 시트로 내보냅니다. TexturePacker JSON과 Godot .tres도 함께 낼 수 있습니다."
-    },
-    tags: ["2D", "Sprite", "Blender", "Unity", "Godot"]
-  }
-];
+  <div class="workbench">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">Explorer</div>
+      <div class="tree" id="tree"></div>
+    </aside>
 
-var TEXT = {
-  zh: { title: "小工具", lead: "做项目时顺手写的小工具。全部在浏览器本地运行，不上传文件，单个 HTML 也能离线用。",
-        open: "打开 →", soon: "更多工具陆续加入", foot: "© STUDIO 7 · ", home: "← STUDIO 7" },
-  en: { title: "Tools", lead: "Small tools made along the way. Everything runs locally in your browser — no uploads, and each one works offline as a single HTML file.",
-        open: "Open →", soon: "More tools on the way", foot: "© STUDIO 7 · ", home: "← STUDIO 7" },
-  ko: { title: "도구", lead: "작업하면서 만든 작은 도구들입니다. 모두 브라우저에서 로컬로 실행되며 파일을 업로드하지 않고, HTML 하나로 오프라인에서도 쓸 수 있습니다.",
-        open: "열기 →", soon: "더 많은 도구가 추가될 예정입니다", foot: "© STUDIO 7 · ", home: "← STUDIO 7" }
-};
+    <div class="stage">
+      <div class="stage-scroll" id="stageScroll">
+        <section class="hero tools-hero" id="top">
+          <div class="hero-text">
+            <p class="cmd"><span class="ps1">$</span> ls ~/tools</p>
+            <h1 class="name"><span id="nameMain">07 Tools</span><small id="alias"></small></h1>
+            <p class="lead" id="lead"></p>
+            <dl class="stats" id="stats"></dl>
+            <p class="base"><span class="ps1">&gt;</span> <span id="hint"></span></p>
+          </div>
+        </section>
+        <div class="sections" id="sections"></div>
+      </div>
 
-function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+      <div class="cmdline">
+        <div class="term-out" id="termOut"></div>
+        <form class="term-line" id="termForm">
+          <span class="ps1">$</span>
+          <input id="termIn" type="text" spellcheck="false" autocomplete="off" placeholder="type a command — help">
+        </form>
+      </div>
+    </div>
+  </div>
 
-function render(lang) {
-  var t = TEXT[lang];
-  document.documentElement.lang = lang === "zh" ? "zh-CN" : lang;
-  document.querySelector('[data-i="title"]').textContent = t.title;
-  document.querySelector('[data-i="lead"]').textContent = t.lead;
-  document.querySelector('[data-i="home"]').textContent = t.home;
-  document.querySelector('[data-i="foot"]').innerHTML = esc(t.foot) + '<a href="https://openc2023.github.io/web-media/">openc2023.github.io/web-media</a>';
-  var html = TOOLS.map(function (x) {
-    return '<a class="card" href="' + esc(x.slug) + '/">' +
-      '<div class="top"><h2>' + esc(x.name) + '</h2><span class="ver">' + esc(x.ver) + '</span></div>' +
-      '<p>' + esc(x.desc[lang] || x.desc.en) + '</p>' +
-      '<div class="tags">' + x.tags.map(function (g) { return '<span>' + esc(g) + '</span>'; }).join("") + '</div>' +
-      '<span class="go">' + esc(t.open) + '</span></a>';
-  }).join("");
-  html += '<div class="card soon"><p>' + esc(t.soon) + '</p></div>';
-  document.getElementById("grid").innerHTML = html;
-  document.querySelectorAll(".langs button").forEach(function (b) { b.classList.toggle("on", b.dataset.lang === lang); });
-  try { localStorage.setItem("07tools-lang", lang); } catch (e) {}
-}
+  <div class="statusbar">
+    <div class="item branch">main</div>
+    <div class="item" id="statusPct">0%</div>
+    <div class="spacer"></div>
+    <div class="item" id="statusClock">—:—:— KST</div>
+    <div class="item">UTF-8</div>
+    <div class="item" id="statusCount">tools: 0</div>
+    <div class="item" id="statusTheme">theme: light</div>
+    <div class="item">zsh</div>
+  </div>
+</div>
 
-var lang = "zh";
-try { lang = localStorage.getItem("07tools-lang") || ""; } catch (e) {}
-if (!TEXT[lang]) { var n = (navigator.language || "zh").toLowerCase(); lang = n.indexOf("ko") === 0 ? "ko" : n.indexOf("zh") === 0 ? "zh" : "en"; }
-render(lang);
+<div class="boot" id="boot" data-phase="access" aria-label="STUDIO 7 启动动画">
+  <div class="boot-hud" aria-hidden="true">
+    <div class="boot-hud-top"><span class="boot-brand"><b>[/]</b> STUDIO 7<br>TOOLBOX TERMINAL / 007</span><span>TIAN HAN · BUSAN<br>OFFLINE UTILITIES / ONLINE</span></div>
+    <div class="boot-hud-bottom"><span>~/tools<br>UTF-8 · SESSION INITIALIZATION</span></div>
+  </div>
+  <div class="splash">
+    <div class="boot-stage">
+      <div class="boot-scope" aria-hidden="true">
+        <svg class="boot-rings" viewBox="0 0 260 260"><circle class="guide" cx="130" cy="130" r="116"/><circle class="ticks" cx="130" cy="130" r="108"/><circle class="orbit" cx="130" cy="130" r="98"/><circle class="inner" cx="130" cy="130" r="78"/><circle class="node" cx="130" cy="32" r="3"/></svg>
+        <div class="sp-logo"><svg viewBox="0 0 1024 1024" aria-hidden="true"><path pathLength="1" d="M161.001,304C234.469,180.024,367.89,104,512,104s277.531,76.024,350.999,200H161.001z M111.92,432H585L301.519,861.517C154.021,772.693,78.16,600.836,111.92,432z M744,432h168.08c26.899,134.521-15.606,273.554-113.127,370.038s-237.001,137.5-371.226,109.164L744,432z"/></svg></div><span class="boot-coordinate">[ 07 / TOOLBOX ]</span>
+      </div>
+      <div><div class="boot-kicker">// SYSTEM INITIALIZATION</div><div class="sp-status" id="spStatus">REQUESTING ACCESS</div><h2 class="sp-welcome"><span id="spTitle" style="font:inherit;letter-spacing:inherit;color:var(--ink);margin:0">07 TOOLS</span><span>LOCAL · OFFLINE · SINGLE FILE</span></h2><p class="sp-sub">STUDIO 7 / UTILITIES FOR MAKING</p></div>
+    </div>
+    <div class="boot-code"><div class="boot-log" id="spLog" aria-hidden="true"></div><div class="boot-count"><span id="spCount">000</span><small>%</small></div></div>
+    <div class="sp-progress" aria-hidden="true"><i id="spBar"></i></div>
+    <div class="boot-rail" aria-hidden="true"><span>ACCESS</span><span>IDENTITY</span><span>TOOLS</span><span>SESSION</span></div>
+  </div>
+  <button class="boot-skip" id="spSkip" type="button" aria-label="跳过开场动画">SKIP [ESC]</button>
+</div>
 
-document.querySelectorAll(".langs button").forEach(function (b) { b.onclick = function () { render(b.dataset.lang); }; });
-document.getElementById("theme").onclick = function () {
-  var d = document.documentElement, next = d.dataset.theme === "dark" ? "light" : "dark";
-  d.dataset.theme = next;
-  try { localStorage.setItem("07tools-theme", next); } catch (e) {}
-};
-</script>
+<script src="data.js?v=1"></script>
+<script src="app.js?v=1"></script>
 </body>
 </html>

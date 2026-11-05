@@ -1,0 +1,40 @@
+/* 07 Tools：在 STUDIO 7 desk 样式（styles.css）之上的少量补充 */
+.home-btn { font-size: 11px; letter-spacing: .04em; color: var(--ink-dim); border: 1px solid var(--line); border-radius: 5px; padding: 3px 8px; white-space: nowrap; transition: color .15s, border-color .15s; }
+.home-btn:hover { color: var(--accent); border-color: var(--accent); }
+
+/* 首屏：没有人像画布，只保留背景字符场 */
+.tools-hero { cursor: auto; align-items: center; }
+.app[data-layout="scroll"] .tools-hero { min-height: 78%; }
+.tools-hero::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 82%, transparent) 38%, transparent 70%); }
+.tools-hero .hero-text { max-width: 620px; }
+.tools-hero .name { font: 600 clamp(48px, 7vw, 92px)/1 var(--mono); letter-spacing: -.03em; }
+.tools-hero .stats { grid-template-columns: repeat(3, 1fr); max-width: 470px; }
+.tools-hero .base { color: var(--ink-dim); }
+
+/* 工具面板 */
+.tool { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px 40px; }
+.tool-desc { margin: 0 0 18px; color: var(--ink); max-width: 56ch; }
+.tool-meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0 0 22px; font-size: 13px; color: var(--ink-dim); }
+.tool-meta b { font-weight: 500; color: var(--syntax-number); }
+.tool-tags { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0 0 26px; padding: 0; font-size: 13px; color: var(--syntax-tag); }
+.tool-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; letter-spacing: .04em; color: var(--ink); transition: background-color .2s, color .2s, border-color .2s; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.btn.primary:hover { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.btn .arrow { transition: transform .2s; }
+.btn:hover .arrow { transform: translateX(3px); }
+.feat { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); font-size: 14px; }
+.feat li { display: grid; grid-template-columns: 4ch 1fr; padding: 10px 0; border-bottom: 1px dashed var(--line); color: var(--ink-2); }
+.feat .ln { padding-top: 0; }
+
+.readme { margin: 0; padding: 0; list-style: none; }
+.readme li { display: grid; grid-template-columns: 4ch 1fr; margin: 0 0 12px; }
+.readme a { color: var(--accent); }
+
+@media (max-width: 860px) { .tool { grid-template-columns: 1fr; } }
+@media (max-width: 600px) {
+  .tools-hero { padding-top: 12svh; padding-bottom: 48px; }
+  .tools-hero::before { background: color-mix(in srgb, var(--bg) 78%, transparent); }
+  .home-btn { display: none; }
+}
