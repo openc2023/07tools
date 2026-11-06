@@ -260,6 +260,13 @@ button[data-guide]{color:var(--purple)}
 .tabs button.on::before{display:none}
 .tabs button[data-tab="crop"].on{color:var(--orange);border-bottom-color:var(--orange)}
 .tabs button[data-tab="guides"].on{color:var(--purple);border-bottom-color:var(--purple)}
+.tabs button[data-tab="cut"].on{color:var(--green);border-bottom-color:var(--green)}
+#cutGo{width:100%}#cutClear{color:var(--danger)}
+#brushTool [data-brush="erase"].on{color:var(--danger)}#brushTool [data-brush="restore"].on{color:var(--green)}
+[data-sam-apply="sub"]{color:var(--danger)}#samNext{color:var(--cyan)}
+#cutBar{height:4px;margin-top:8px;border-radius:2px;background:var(--line);overflow:hidden}
+#cutBar i{display:block;height:100%;width:0;background:var(--green);transition:width .2s}
+@media(max-width:767px){.tabs button[data-tab="cut"]{display:none}}
 input[type=checkbox]{border-radius:2px}
 input[type=checkbox]:checked{background:var(--accent);border-color:var(--accent)}
 input[type=checkbox]:checked::after{border-color:var(--on-accent)}
@@ -287,6 +294,12 @@ kbd{color:var(--purple);background:var(--code-bg)}
 #exportDlg .summary{font-size:11px}
 #exportDlg .summary p{margin:0 0 6px}#exportDlg .summary p:last-child{margin:0}
 #exportDlg .summary .eng{color:var(--purple);font-weight:600}
+#exportDlg .sub{margin:6px 0 0}
+#exMatteRow input[type=color]{margin-left:2px;flex:none}
+[data-opt="sheet"]{display:flex;flex-direction:column;gap:8px}
+[data-opt="sheet"][hidden]{display:none}
+#impPrev.grab{cursor:move;touch-action:none}
+#sheetHow{margin-bottom:2px}
 .pivot{display:flex;align-items:center;gap:10px}
 .pivot .pair{flex:1}
 .pgrid{display:grid;grid-template-columns:repeat(3,16px);gap:3px;padding:4px;border:1px solid var(--line2);border-radius:4px;background:var(--input);flex-shrink:0}
@@ -409,7 +422,7 @@ button,label,input,select{touch-action:manipulation}
 <header id="top">
   <div class="brand">
     <svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><rect x="1" y="1" width="7" height="7" rx="1.5" fill="currentColor"/><rect x="10" y="1" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4" opacity=".55"/><rect x="1" y="10" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4" opacity=".55"/><rect x="10" y="10" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4" opacity=".55"/></svg>
-    SPRITE / ALIGN<small>v1.7</small>
+    SPRITE / ALIGN<small>v2.0</small>
   </div>
   <span class="path">~/tools/sprite-align</span>
   <button class="btn primary" id="btnImport" title="也可以把文件拖进来，或 Ctrl+V 粘贴">
@@ -500,22 +513,33 @@ button,label,input,select{touch-action:manipulation}
       <label class="num"><i>宽</i><input type="number" id="cellW" min="1" max="8192"></label>
       <label class="num"><i>高</i><input type="number" id="cellH" min="1" max="8192"></label>
     </div>
+    <div class="pair" style="margin-top:6px" title="格子、所有帧的内容和参考线一起按比例缩放">
+      <label class="num"><i>整体</i><input type="number" id="cellScale" min="1" max="1000" step="5" value="100"><b>%</b></label>
+      <button class="btn" id="cellScaleGo">整体缩放</button>
+    </div>
   </div>
 
-  <div class="tabs"><button data-tab="transform" class="on">变换</button><button data-tab="crop">裁剪</button><button data-tab="guides">参考线</button></div>
+  <div class="tabs"><button data-tab="transform" class="on">变换</button><button data-tab="crop">裁剪</button><button data-tab="guides">参考线</button><button data-tab="cut">抠图</button></div>
 
   <div data-pane="transform">
+    <div class="group">
+      <label class="chk"><input type="checkbox" id="dragSrc">框内拖原图（框不动）</label>
+      <div class="hint">小图被截掉时用：框内拖＝移动原图，拖边角＝放大 / 缩小框（图不缩放）。不勾时按住 Ctrl 拖也一样。</div>
+    </div>
     <div class="group">
       <div class="ghead">当前帧大小 <span>px</span></div>
       <div class="pair">
         <label class="num"><i>宽</i><input type="number" id="fw" step="1" min="1"></label>
         <label class="num"><i>高</i><input type="number" id="fh" step="1" min="1"></label>
       </div>
+      <div class="field" style="margin-top:6px"><label>缩放</label><label class="num"><input type="number" id="fscale" step="1" min="1"><b>%</b></label></div>
+      <div class="grid3" style="margin-top:4px"><button class="btn" data-scale="50">50%</button><button class="btn" data-scale="100">100%</button><button class="btn" data-scale="200">200%</button></div>
       <label class="chk small" style="margin-top:6px"><input type="checkbox" id="lockRatio" checked>锁定比例</label>
       <div class="hint" id="fsize">—</div>
     </div>
     <div class="group">
       <div class="ghead">一键对齐 <label class="chk small" style="min-height:0"><input type="checkbox" id="applyAll">所有帧</label></div>
+      <div class="seg" id="alignBy" style="margin-bottom:6px"><button data-by="box">按外框</button><button data-by="content">按内容</button></div>
       <div class="sub">按大小框</div>
       <div class="grid3"><button class="btn primary" data-align="fitBox" title="等比缩放到刚好放进大小框，并居中">放进框</button><button class="btn" data-align="fitBoxW">宽同框</button><button class="btn" data-align="fitBoxH">高同框</button></div>
       <div class="sub">放到格子中间</div>
@@ -524,7 +548,7 @@ button,label,input,select{touch-action:manipulation}
       <div class="grid3"><button class="btn" data-align="baseCenter">中心</button><button class="btn" data-align="baseBottom">底边</button><button class="btn" data-align="baseTop">顶边</button><button class="btn" data-align="baseHeight">高度</button><button class="btn" data-align="baseWidth">宽度</button><button class="btn" data-align="copyScale" title="缩放比例同当前帧">同缩放</button></div>
       <div class="sub">其他</div>
       <div class="grid3"><button class="btn" data-align="pivot" title="内容的同一相对位置对到导出轴点上（轴点在“导出”里设，比如底部中间＝脚底对齐）">对齐轴点</button><button class="btn danger" data-align="reset">复位</button></div>
-      <div class="hint" style="margin-top:10px">都按不透明的内容算，透明留白不算。</div>
+      <div class="hint" style="margin-top:10px">按外框＝用蓝色外框对齐、缩放；按内容＝只算不透明的内容（虚线框），透明留白不算。</div>
     </div>
   </div>
 
@@ -541,6 +565,10 @@ button,label,input,select{touch-action:manipulation}
       <div class="grid2" style="margin-top:8px"><button class="btn" id="cTrim">裁掉透明边</button><button class="btn" id="cHome">复位裁剪</button></div>
       <button class="btn" id="cAll" style="width:100%;margin-top:4px">同样尺寸给所有帧</button>
       <div class="hint" style="margin-top:10px">在画面上拖框的边或角；框内拖＝移动；框外拖＝重新框选。裁剪不会让画面在格子里移位。</div>
+    </div>
+    <div class="group">
+      <label class="chk"><input type="checkbox" id="cropOthers">拖动其他帧的虚框</label>
+      <div class="hint">白色虚框是同一张图里其他帧的裁剪框。单击虚框＝切换到那一帧；勾上后（或按住 Shift）拖虚框＝直接挪那一帧。</div>
     </div>
   </div>
 
@@ -566,6 +594,49 @@ button,label,input,select{touch-action:manipulation}
       <input type="file" id="fileRef" accept="image/*" hidden>
     </div>
   </div>
+
+  <div data-pane="cut" hidden>
+    <div class="group">
+      <div class="ghead">AI 去背景 <label class="chk small" style="min-height:0"><input type="checkbox" id="applyAllCut" checked>所有帧</label></div>
+      <button class="btn primary" id="cutGo">一键去背景</button>
+      <div id="cutBar"><i></i></div>
+      <div class="hint" id="cutState" style="margin-top:6px">—</div>
+    </div>
+    <div class="group">
+      <div class="ghead">框选抠图 <span>在画面上选</span></div>
+      <div class="seg" id="samTool" style="margin-bottom:8px"><button data-sam-tool="box" title="拖一个框圈住要的东西">框选</button><button data-sam-tool="add" title="点要的部分（右键＝不要）">+ 点</button><button data-sam-tool="sub" title="点不要的部分">− 点</button><button data-sam-tool="" title="退出框选，回到普通拖动">关</button></div>
+      <div class="grid3"><button class="btn primary" data-sam-apply="replace" title="选中的留下，这一帧其他部分变透明">只留选中</button><button class="btn" data-sam-apply="add" title="选中的部分加回到结果里">加进结果</button><button class="btn" data-sam-apply="sub" title="选中的部分变透明">从结果去掉</button></div>
+      <div class="grid2" style="margin-top:4px"><button class="btn" id="samNext" title="同一个点，换大一点或小一点的范围">换个范围</button><button class="btn" id="samClear" title="Esc">清空选区</button></div>
+      <label class="chk small" style="margin-top:6px"><input type="checkbox" id="samAll">所有帧用同样的框 / 点</label>
+      <div class="hint" id="samState" style="margin-top:6px">—</div>
+    </div>
+    <div class="group">
+      <div class="ghead">修边 <span>去掉边缘多余的</span></div>
+      <div class="field"><label>边缘收缩</label><input type="range" id="cutShrink" min="0" max="10" step="1" value="0"><b id="cutShrinkV">0 px</b></div>
+      <div class="field" title="和主体不连着、面积小于这个的碎块都去掉"><label>去小碎块</label><input type="range" id="cutSpeck" min="0" max="6" step="1" value="0"><b id="cutSpeckV">关</b></div>
+      <label class="chk" title="半透明的边缘像素改用旁边不透明像素的颜色，去掉原背景留下的色边"><input type="checkbox" id="cutDefringe">去色边</label>
+      <div class="seg" id="brushTool" style="margin:8px 0"><button data-brush="erase" title="在画面上涂：涂到的地方变透明">擦除</button><button data-brush="restore" title="在画面上涂：涂到的地方恢复原图">恢复</button><button data-brush="" title="退出画笔，回到普通拖动">关</button></div>
+      <div class="field"><label>画笔大小</label><input type="range" id="brushSize" min="2" max="160" step="1" value="30"><b id="brushSizeV">30 px</b></div>
+      <div class="field"><label>画笔硬度</label><input type="range" id="brushHard" min="0" max="100" step="5" value="80"><b id="brushHardV">80%</b></div>
+      <div class="hint" style="margin-top:6px">边缘有一圈灰边 / 杂色：把“边缘收缩”调到 1–3 px。零星的小点：调“去小碎块”。边缘发暗 / 带原背景的颜色：勾“去色边”。邻居的碎块、零碎残留：用“擦除”直接涂掉，涂错了用“恢复”涂回来。每一帧单独改，不影响别的帧；Ctrl+Z 撤销，Ctrl+Y 重做。</div>
+    </div>
+    <div class="group">
+      <div class="ghead">结果</div>
+      <label class="chk"><input type="checkbox" id="cutUse" checked>使用抠图结果</label>
+      <label class="chk"><input type="checkbox" id="cutHard">硬边（像素图）</label>
+      <div class="field" style="margin:6px 0 4px"><label>预览底色</label></div>
+      <div class="seg" id="cutBg"><button data-bg="">棋盘</button><button data-bg="#000">黑</button><button data-bg="#fff">白</button><button data-bg="#00ff00">绿</button></div>
+      <button class="btn" id="cutClear" style="width:100%;margin-top:6px">清除抠图</button>
+      <div class="hint" style="margin-top:10px">只改透明度，原图不动：随时可以关掉或清除。每一帧的抠图互不影响（同一张精灵表上的帧也一样）。工程文件会一起保存抠图结果，导出时按抠图后的样子。</div>
+    </div>
+    <div class="group">
+      <div class="ghead">AI 模型 <span>只在电脑上</span></div>
+      <div class="hint" id="aiStatus">—</div>
+      <div class="grid2" style="margin-top:6px"><button class="btn" id="aiFolder" title="没网的电脑：选从别处拷来的 models 文件夹">选本机文件夹…</button><button class="btn" id="aiSave" title="把全部模型打包下载，存在电脑上或拷给别的电脑">存到电脑（zip）</button></div>
+      <div class="hint" style="margin-top:8px">模型在你的电脑上运行，图片不会上传。第一次用时从网站自动下载，之后保存在浏览器里。</div>
+      <input type="file" id="aiFolderInput" webkitdirectory multiple hidden>
+    </div>
+  </div>
 </aside>
 </div>
 
@@ -575,6 +646,12 @@ button,label,input,select{touch-action:manipulation}
   <span><span class="k">格子 </span><span class="v" id="stCell">—</span></span>
   <span><span class="k">缩放 </span><span class="v" id="stZoom">—</span></span>
 </footer>
+
+<dialog id="aiDlg">
+  <div class="dlg-head"><h3>AI 模型</h3><span class="grow"></span><button class="btn ghost icon" data-ai="cancel" title="取消">✕</button></div>
+  <div style="padding:16px;line-height:1.7"><p id="aiMsg" style="margin:0 0 10px"></p><p class="hint" style="margin:0">没网的电脑：在有网的电脑上点“存到电脑（zip）”，把解压出来的 models 文件夹拷过去，再点“用电脑上的模型文件夹”。</p></div>
+  <div class="dlg-foot"><button class="btn" data-ai="folder">用电脑上的模型文件夹…</button><span class="grow"></span><button class="btn" data-ai="cancel">取消</button><button class="btn primary" data-ai="site">自动下载（推荐）</button></div>
+</dialog>
 
 <dialog id="importDlg">
   <div class="dlg-head"><h3>导入</h3><span class="hint" id="impFiles"></span><button class="btn ghost icon" data-close title="取消">✕</button></div>
@@ -589,8 +666,16 @@ button,label,input,select{touch-action:manipulation}
       </div>
       <div class="opts">
         <div data-opt="sheet">
-          <div class="field"><label>切成</label><div class="pair"><label class="num"><i>横</i><input type="number" id="sheetCols" min="1" max="64" value="3"></label><label class="num"><i>竖</i><input type="number" id="sheetRows" min="1" max="64" value="3"></label></div></div>
-          <label class="chk"><input type="checkbox" id="skipEmpty" checked>跳过全透明的格子</label>
+          <div class="seg" id="sheetHow"><button data-how="even">平均切</button><button data-how="grid">按网格</button><button data-how="auto">逐块识别</button></div>
+          <div class="field" data-how-opt="even"><label>切成</label><div class="pair"><label class="num"><i>横</i><input type="number" id="sheetCols" min="1" max="64" value="3"></label><label class="num"><i>竖</i><input type="number" id="sheetRows" min="1" max="64" value="3"></label></div></div>
+          <div data-how-opt="grid">
+            <div class="field"><label>起点</label><div class="pair"><label class="num"><i>X</i><input type="number" id="gridX" min="0" value="0"><b>px</b></label><label class="num"><i>Y</i><input type="number" id="gridY" min="0" value="0"><b>px</b></label></div></div>
+            <div class="field"><label>格子</label><div class="pair"><label class="num"><i>宽</i><input type="number" id="gridW" min="1" value="64"><b>px</b></label><label class="num"><i>高</i><input type="number" id="gridH" min="1" value="64"><b>px</b></label></div></div>
+            <div class="field"><label>间距</label><div class="pair"><label class="num"><i>X</i><input type="number" id="gridGX" min="0" value="0"><b>px</b></label><label class="num"><i>Y</i><input type="number" id="gridGY" min="0" value="0"><b>px</b></label></div></div>
+            <div class="field"><label></label><button class="btn" id="gridDetect" title="按透明空隙找出每个图的位置，算出起点、格子和间距">自动找网格</button></div>
+          </div>
+          <div class="field" data-how-opt="auto"><label>合并</label><label class="num" title="相距这么近的零碎部分算同一个图（比如分开的眼睛、特效）"><input type="number" id="blobMerge" min="0" max="64" value="4"><b>px 以内算一块</b></label></div>
+          <label class="chk" data-how-opt="even grid"><input type="checkbox" id="skipEmpty" checked>跳过全透明的格子</label>
         </div>
         <div data-opt="gif">
           <div class="field"><label>抽帧</label><label class="num"><i>每</i><input type="number" id="gifStep" min="1" value="1"><b>帧取 1 帧</b></label></div>
@@ -613,6 +698,9 @@ button,label,input,select{touch-action:manipulation}
     <div class="preview"><canvas id="exPrev"></canvas></div>
     <div class="opts">
       <div class="seg" id="exLayout"><button data-layout="grid">网格</button><button data-layout="row">横条</button><button data-layout="col">竖条</button></div>
+      <div class="field" title="只影响导出的图，不改工程"><label>导出缩放</label><div class="pair">
+        <label class="num"><input type="number" id="exScale" min="1" max="1000" step="5" value="100"><b>%</b></label>
+        <div class="seg" id="exScaleSeg" style="margin:0"><button data-exs="50">50</button><button data-exs="100">100</button><button data-exs="200">200</button></div></div></div>
       <div class="field" id="exColsRow"><label>列数</label><label class="num"><input type="number" id="exCols" min="1" max="64" value="3"><b>列</b></label></div>
       <div class="field"><label>边距</label><div class="pair">
         <label class="num" title="整张图四周留白"><i>外</i><input type="number" id="exMargin" min="0" max="256" value="0"><b>px</b></label>
@@ -624,9 +712,15 @@ button,label,input,select{touch-action:manipulation}
       <label class="chk"><input type="checkbox" id="exJson">附带 JSON 帧数据（TexturePacker 格式）</label>
       <label class="chk"><input type="checkbox" id="exTres">附带 Godot SpriteFrames（.tres）</label>
       <div class="summary" id="exBlender"></div>
+      <div class="sub">动图 · 按预览速度播放</div>
+      <div class="seg" id="exAnim"><button data-anim="gif">GIF</button><button data-anim="webp">WebP</button><button data-anim="apng">APNG</button></div>
+      <label class="chk"><input type="checkbox" id="exLoop">循环播放（不勾＝只播一次）</label>
+      <label class="chk" id="exLossRow"><input type="checkbox" id="exLossless">WebP 无损（像素风推荐，文件更大）</label>
+      <label class="chk" id="exMatteRow"><input type="checkbox" id="exMatteOn">半透明边缘先混合到背景色<input type="color" id="exMatte" value="#ffffff" title="网页背景色"></label>
+      <div class="summary" id="exAnimInfo"></div>
     </div>
   </div>
-  <div class="dlg-foot"><button class="btn" id="exZip">每帧单独 PNG（zip）</button><span class="grow"></span><button class="btn" data-close>关闭</button><button class="btn primary" id="exSheet">导出精灵表 PNG</button></div>
+  <div class="dlg-foot"><button class="btn" id="exZip">每帧单独 PNG（zip）</button><button class="btn" id="exAnimGo">导出动图</button><span class="grow"></span><button class="btn" data-close>关闭</button><button class="btn primary" id="exSheet">导出精灵表 PNG</button></div>
 </dialog>
 
 <div id="toast"></div>
@@ -654,13 +748,18 @@ const I18N={
   '共':['','총'],'帧':['frames','프레임'],
   '格子':['Cell','셀'],'每帧画布 · 所有帧共用':['canvas per frame · shared','프레임 캔버스 · 공통'],
   '宽':['W','가로'],'高':['H','세로'],'变换':['Transform','변형'],'裁剪':['Crop','자르기'],'参考线':['Guides','가이드'],
-  '当前帧大小':['Frame size','현재 프레임 크기'],'锁定比例':['Lock ratio','비율 고정'],'一键对齐':['Quick align','빠른 정렬'],'所有帧':['All frames','모든 프레임'],
+  '当前帧大小':['Frame size','현재 프레임 크기'],'整体':['All','전체'],'整体缩放':['Scale all','전체 배율'],'导出缩放':['Export scale','내보내기 배율'],
+  '格子、所有帧的内容和参考线一起按比例缩放':['Scales the cell, every frame’s content and the guides together','칸, 모든 프레임 내용, 가이드를 함께 비율대로 조절'],
+  '只影响导出的图，不改工程':['Only affects the exported images; the project is unchanged','내보낸 이미지에만 적용되며 프로젝트는 그대로입니다'],
+  '格子已缩放到 {0}×{1}':['Cell scaled to {0}×{1}','칸을 {0}×{1}로 조절했습니다'],'缩放':['Scale','배율'],'拖动其他帧的虚框':['Drag other frames’ dashed boxes','다른 프레임 점선 박스 드래그'],
+  '白色虚框是同一张图里其他帧的裁剪框。单击虚框＝切换到那一帧；勾上后（或按住 Shift）拖虚框＝直接挪那一帧。':['The white dashed boxes are the crops of other frames from the same image. Click one to go to that frame; with this ticked (or holding Shift), drag one to move that frame directly.','흰 점선 박스는 같은 이미지의 다른 프레임 자르기 영역입니다. 클릭하면 그 프레임으로 바뀌고, 체크하면(또는 Shift를 누르고) 드래그해서 그 프레임을 바로 옮길 수 있습니다.'],'锁定比例':['Lock ratio','비율 고정'],'一键对齐':['Quick align','빠른 정렬'],'所有帧':['All frames','모든 프레임'],
   '按大小框':['by size box','크기 상자 기준'],'等比缩放到刚好放进大小框，并居中':['Scale proportionally to fit the size box, then center','크기 상자에 꼭 맞게 비율 유지로 조절한 뒤 가운데 정렬'],
   '放进框':['Fit box','상자 맞춤'],'宽同框':['Box W','상자 너비'],'高同框':['Box H','상자 높이'],
   '放到格子中间':['center in cell','셀 가운데로'],'居中':['Center','가운데'],'水平':['Horiz.','가로'],'垂直':['Vert.','세로'],
   '跟基准帧一样':['match base frame','기준 프레임에 맞춤'],'中心':['Center','중심'],'底边':['Bottom','아래'],'顶边':['Top','위'],'高度':['Height','높이'],'宽度':['Width','너비'],
   '缩放比例同当前帧':['Same scale as the current frame','현재 프레임과 같은 배율'],'同缩放':['Same scale','같은 배율'],'其他':['other','기타'],'复位':['Reset','초기화'],
-  '都按不透明的内容算，透明留白不算。':['Based on opaque content; transparent margins are ignored.','불투명한 내용 기준이며 투명 여백은 무시합니다.'],
+  '按外框':['By box','박스 기준'],'按内容':['By content','내용 기준'],
+  '按外框＝用蓝色外框对齐、缩放；按内容＝只算不透明的内容（虚线框），透明留白不算。':['By box = align and scale using the blue box; by content = only the opaque content (dashed box) counts, transparent margins are ignored.','박스 기준 = 파란 바깥 박스로 정렬·크기 조절, 내용 기준 = 불투명한 내용(점선 박스)만 계산하고 투명 여백은 무시합니다.'],
   '裁剪区域':['Crop area','자르기 영역'],'原图 px':['source px','원본 px'],'应用到所有帧':['Apply to all frames','모든 프레임에 적용'],
   '裁掉透明边':['Trim transparent','투명 여백 자르기'],'复位裁剪':['Reset crop','자르기 초기화'],'同样尺寸给所有帧':['Same size for all frames','모든 프레임에 같은 크기'],
   '在画面上拖框的边或角；框内拖＝移动；框外拖＝重新框选。裁剪不会让画面在格子里移位。':
@@ -694,6 +793,33 @@ const I18N={
   '勾了帧数据时，精灵表会和 JSON / .tres 打包成一个 zip。':['With frame data checked, the sheet is zipped together with the JSON / .tres.','프레임 데이터를 체크하면 시트와 JSON / .tres를 하나의 zip으로 묶습니다.'],
   '.tres 和图片要放在 Godot 项目根目录，或打开时按提示重新指定图片。':['Put the .tres and the image in the Godot project root, or re-pick the image when Godot asks.','.tres와 이미지를 Godot 프로젝트 루트에 두거나, 열 때 안내에 따라 이미지를 다시 지정하세요.'],
   '对齐轴点':['To pivot','피벗 맞춤'],
+  '平均切':['Even','균등 분할'],'按网格':['Grid','격자'],'逐块识别':['Detect','개별 인식'],'起点':['Origin','시작점'],'间距':['Gap','간격'],
+  '自动找网格':['Find grid','격자 자동 찾기'],'按透明空隙找出每个图的位置，算出起点、格子和间距':['Finds each sprite from the transparent gaps and works out origin, cell size and gap','투명한 틈으로 각 그림의 위치를 찾아 시작점, 셀 크기, 간격을 계산합니다'],
+  '合并':['Merge','병합'],'px 以内算一块':['px apart = one sprite','px 이내는 한 덩어리'],
+  '相距这么近的零碎部分算同一个图（比如分开的眼睛、特效）':['Pieces this close count as one sprite (e.g. separate eyes or effects)','이만큼 가까운 조각은 하나의 그림으로 봅니다 (떨어진 눈, 이펙트 등)'],
+  '按网格：每格 {0}，{1} → {2} 帧':['Grid: {0} per cell, {1} → {2} frames','격자: 셀 {0}, {1} → {2}프레임'],
+  '在预览上拖：框内＝移动起点，右下角小方块＝改格子大小。':['Drag on the preview: inside = move the origin, bottom-right square = cell size.','미리보기에서 드래그: 안쪽 = 시작점 이동, 오른쪽 아래 사각형 = 셀 크기.'],
+  '识别出 {0} 块 → {1} 帧；每块一帧，脚底对齐到格子底边。':['Found {0} sprites → {1} frames; one frame each, feet on the cell bottom.','{0}개 인식 → {1}프레임. 하나당 한 프레임, 발을 셀 아래에 맞춥니다.'],
+  '没找到规则的网格，试试“逐块识别”':['No regular grid found; try “Detect”','규칙적인 격자를 찾지 못했습니다. “개별 인식”을 사용해 보세요'],
+  '这张图里没有识别到图形':['No sprites found in this image','이 이미지에서 그림을 찾지 못했습니다'],
+  '识别出 {0} 块，已导入 {0} 帧':['Found {0} sprites, imported {0} frames','{0}개 인식, {0}프레임 가져옴'],
+  '动图 · 按预览速度播放':['Animation · plays at preview speed','애니메이션 · 미리보기 속도로 재생'],
+  '循环播放（不勾＝只播一次）':['Loop (unchecked = play once)','반복 재생 (해제 = 한 번만)'],
+  'WebP 无损（像素风推荐，文件更大）':['WebP lossless (best for pixel art, larger file)','WebP 무손실 (픽셀 아트 추천, 파일이 더 큼)'],
+  '半透明边缘先混合到背景色':['Blend soft edges onto background colour','반투명 가장자리를 배경색에 미리 섞기'],
+  '网页背景色':['Page background colour','웹페이지 배경색'],
+  '导出动图':['Export animation','애니메이션 내보내기'],'导出失败：{0}':['Export failed: {0}','내보내기 실패: {0}'],'表情动画':['animation','표정애니메이션'],
+  '正在生成动图 {0} / {1}':['Encoding animation {0} / {1}','애니메이션 생성 중 {0} / {1}'],
+  '已导出 {0}（{1} 帧，{2}）':['Exported {0} ({1} frames, {2})','{0} 내보냄 ({1}프레임, {2})'],
+  '这个浏览器不能生成 WebP（iPhone / Safari），请改用 APNG。':['This browser can’t encode WebP (iPhone / Safari); use APNG instead.','이 브라우저는 WebP를 만들 수 없습니다 (iPhone / Safari). APNG를 사용하세요.'],
+  '这个浏览器太旧，不能生成 APNG。':['This browser is too old to encode APNG.','이 브라우저는 너무 오래되어 APNG를 만들 수 없습니다.'],
+  '最多 256 色，透明只有全透 / 不透两档：半透明边缘会有锯齿或白边。勾下面的选项、选成网页背景色，放在同色背景上就看不出来。':
+    ['Up to 256 colours, and transparency is on/off only: soft edges get jagged or a halo. Tick the option below and pick the page background colour to hide it on that background.',
+     '최대 256색, 투명은 완전 투명 / 불투명 두 단계뿐이라 반투명 가장자리가 들쭉날쭉하거나 흰 테두리가 생깁니다. 아래 옵션을 켜고 웹페이지 배경색을 고르면 같은 배경에서는 티가 나지 않습니다.'],
+  '网页首选：完整透明、文件最小，Chrome / Edge / Safari / 安卓都能播。':['Best for the web: full transparency, smallest file; plays in Chrome / Edge / Safari / Android.','웹 추천: 완전한 투명, 가장 작은 파일. Chrome / Edge / Safari / 안드로이드에서 재생됩니다.'],
+  '无损、完整透明，所有现代浏览器都能播；文件比 WebP 大。':['Lossless with full transparency; plays in all modern browsers; larger than WebP.','무손실, 완전한 투명, 모든 최신 브라우저에서 재생. WebP보다 큽니다.'],
+  '每帧 {0} ms':['{0} ms per frame','프레임당 {0} ms'],
+  'GIF 每帧最短 20 ms，太快会被浏览器放慢。':['GIF frames can’t be shorter than 20 ms; faster ones get slowed down by browsers.','GIF 프레임은 20 ms보다 짧을 수 없어 너무 빠르면 브라우저가 느리게 재생합니다.'],
   '内容的同一相对位置对到导出轴点上（轴点在“导出”里设，比如底部中间＝脚底对齐）':['Puts the same relative point of the content on the export pivot (set the pivot in Export; bottom-center = feet)','내용의 같은 상대 위치를 내보내기 피벗에 맞춥니다 (피벗은 “내보내기”에서 설정, 아래 가운데 = 발 맞춤)'],
   '更多':['More','더보기'],'左移 1px':['Left 1px','왼쪽 1px'],'上移 1px':['Up 1px','위 1px'],'下移 1px':['Down 1px','아래 1px'],'右移 1px':['Right 1px','오른쪽 1px'],
   '缩小 1%':['Shrink 1%','1% 축소'],'放大 1%':['Grow 1%','1% 확대'],'拖动或点按：展开 / 收起':['Drag or tap: expand / collapse','드래그하거나 탭: 펼치기 / 접기'],
@@ -720,11 +846,10 @@ const I18N={
   'Blender 插件“添加图片”时填 横 <b>{0}</b>、竖 <b>{1}</b>，末尾空格自动不编号。<br>每帧单独 PNG：在 Blender 里用 1×1 多选导入。':
     ['In the Blender add-on\'s “Add images”, enter columns <b>{0}</b> and rows <b>{1}</b>; empty cells at the end get no number.<br>Per-frame PNGs: import them in Blender as 1×1 with multi-select.',
      'Blender 애드온 “이미지 추가”에서 가로 <b>{0}</b>, 세로 <b>{1}</b>를 입력하세요. 끝의 빈 칸은 번호가 붙지 않습니다.<br>프레임별 PNG: Blender에서 1×1로 여러 장 선택해 가져오세요.'],
-  '裁剪：拖框的边或角 · 框内拖＝移动 · 框外拖＝重新框选 · 滚轮＝缩放视图':
-    ['Crop: drag box edges or corners · drag inside = move · drag outside = new box · wheel = zoom view','자르기: 상자 가장자리/모서리 드래그 · 안쪽 드래그 = 이동 · 바깥 드래그 = 새로 선택 · 휠 = 화면 확대/축소'],
-  '变换：框内拖＝移动（Alt 不吸附）· 拖角＝等比缩放 · 拖边＝单向拉伸（Shift 反过来）· 滚轮＝缩放视图 · 空格/中键拖＝平移':
-    ['Transform: drag inside = move (Alt: no snap) · corners = uniform scale · edges = stretch (Shift swaps) · wheel = zoom view · Space/middle drag = pan',
-     '변형: 안쪽 드래그 = 이동 (Alt: 스냅 없음) · 모서리 = 비율 유지 크기 · 가장자리 = 한 방향 늘이기 (Shift 반대) · 휠 = 화면 확대/축소 · Space/가운데 드래그 = 이동'],
+  '裁剪：拖框的边或角 · 框内拖＝移动 · 框外拖＝重新框选 · 单击虚框＝切到那一帧 · Shift 拖虚框＝挪那一帧 · 滚轮＝缩放视图':
+    ['Crop: drag the box edges or corners · drag inside = move · drag outside = new box · click a dashed box = go to that frame · Shift+drag a dashed box = move that frame · wheel = zoom view','자르기: 박스 가장자리·모서리 드래그 · 안쪽 드래그 = 이동 · 바깥 드래그 = 새로 지정 · 점선 박스 클릭 = 그 프레임으로 · Shift+점선 박스 드래그 = 그 프레임 이동 · 휠 = 화면 확대/축소'],
+  '变换：框内拖＝移动（Alt 不吸附）· 拖角＝等比缩放 · 拖边＝单向拉伸（Shift 反过来）· 虚线框内拖 / 拖它的小方块＝只动内容（外框不动） · 滚轮＝缩放视图 · 空格/中键拖＝平移':
+    ['Transform: drag inside = move (Alt: no snap) · corners = uniform scale · edges = stretch (Shift swaps) · drag inside the dashed box / its small squares = move or scale only the content (the outer box stays) · wheel = zoom view · Space/middle drag = pan','변형: 안쪽 드래그 = 이동 (Alt: 스냅 없음) · 모서리 = 비율 유지 크기 · 가장자리 = 한 방향 늘이기 (Shift 반대) · 점선 박스 안 드래그 / 작은 사각형 = 내용만 이동·크기 조절 (바깥 박스 고정) · 휠 = 화면 확대/축소 · Space/가운데 드래그 = 이동'],
   '就绪 · 拖入文件或 Ctrl+V 粘贴开始':['Ready · drop files or press Ctrl+V to start','준비됨 · 파일을 끌어다 놓거나 Ctrl+V로 시작하세요'],
   '不支持这种文件：请用 PNG / JPG / WEBP / GIF / MP4 / WEBM':['Unsupported file: use PNG / JPG / WEBP / GIF / MP4 / WEBM','지원하지 않는 파일입니다: PNG / JPG / WEBP / GIF / MP4 / WEBM을 사용하세요'],
   '{0} 个文件':['{0} files','파일 {0}개'],'预览失败：{0}':['Preview failed: {0}','미리보기 실패: {0}'],
@@ -742,12 +867,69 @@ const I18N={
   '表情_':['frame_','표정_'],'表情帧.zip':['frames.zip','표정프레임.zip'],'已导出 {0} 张':['Exported {0} images','{0}장 내보냄'],
   '表情对齐工程.json':['sprite-align-project.json','스프라이트정렬_프로젝트.json'],'工程已保存（图片也在里面）':['Project saved (images included)','프로젝트를 저장했습니다 (이미지 포함)'],
   '不是本工具的工程文件':['Not a project file of this tool','이 도구의 프로젝트 파일이 아닙니다'],'已打开：{0} 帧':['Opened: {0} frames','열었습니다: {0}프레임'],'打开失败：{0}':['Open failed: {0}','열기 실패: {0}'],
+  '抠图':['Cutout','누끼'],'AI 去背景':['AI background removal','AI 배경 제거'],'一键去背景':['Remove background','배경 제거'],'结果':['Result','결과'],
+  '使用抠图结果':['Use the cutout','누끼 결과 사용'],'硬边（像素图）':['Hard edges (pixel art)','딱딱한 가장자리 (픽셀 아트)'],'清除抠图':['Clear cutout','누끼 지우기'],
+  '只改透明度，原图不动：随时可以关掉或清除。每一帧的抠图互不影响（同一张精灵表上的帧也一样）。工程文件会一起保存抠图结果，导出时按抠图后的样子。':['Only transparency changes; the original image is kept, so you can switch it off or clear it any time. Each frame has its own cutout, even frames from the same sheet. The project file saves the cutout, and exports use it.','투명도만 바뀌고 원본은 그대로라 언제든 끄거나 지울 수 있습니다. 프레임마다 누끼가 따로라 같은 시트의 프레임끼리도 영향을 주지 않습니다. 프로젝트 파일에 누끼도 저장되고, 내보내기는 누끼 결과 기준입니다.'],
+  '模型：IS-Net（Apache-2.0），在你的电脑上运行，图片不会上传。第一次用要下载约 170 MB，之后浏览器会记住。':['Model: IS-Net (Apache-2.0). It runs on your computer and images are never uploaded. The first use downloads about 170 MB; the browser keeps it after that.','모델: IS-Net (Apache-2.0). 내 컴퓨터에서 실행되며 이미지는 업로드되지 않습니다. 처음 한 번 약 170 MB를 내려받고, 그 뒤로는 브라우저가 기억합니다.'],
+  '要用网址打开本页才能抠图（直接双击 HTML 文件不行）。':['Cutout needs the page opened from a web address (double-clicking the HTML file will not work).','누끼는 웹 주소로 열어야 쓸 수 있습니다 (HTML 파일을 더블클릭하면 안 됩니다).'],
+  '模型已就绪 · {0}':['Model ready · {0}','모델 준비됨 · {0}'],'第一次点“一键去背景”会下载模型（约 170 MB）。':['The first click on “Remove background” downloads the model (about 170 MB).','처음 “배경 제거”를 누르면 모델을 내려받습니다 (약 170 MB).'],
+  '加载失败：{0}':['Failed to load: {0}','불러오기 실패: {0}'],'下载失败：{0}':['Download failed: {0}','다운로드 실패: {0}'],'找不到模型文件（models 文件夹）':['Model files not found (models folder)','모델 파일을 찾을 수 없습니다 (models 폴더)'],
+  '正在下载模型 {0} / {1} MB':['Downloading model {0} / {1} MB','모델 내려받는 중 {0} / {1} MB'],'正在检查模型…':['Checking model…','모델 확인 중…'],'正在启动模型…':['Starting model…','모델 시작 중…'],
+  '模型文件不完整，请重新上传 models 文件夹':['Model files are incomplete; upload the models folder again','모델 파일이 불완전합니다. models 폴더를 다시 올려 주세요'],
+  '显卡加速':['GPU','그래픽카드 가속'],'CPU（较慢）':['CPU (slower)','CPU (느림)'],'停止':['Stop','중지'],
+  '正在抠图 {0} / {1}…':['Removing background {0} / {1}…','배경 제거 중 {0} / {1}…'],'已抠图 {0} 处':['Background removed in {0} regions','{0}곳 배경 제거 완료'],
+  '抠图失败：{0}':['Cutout failed: {0}','누끼 실패: {0}'],'已清除抠图':['Cutout cleared','누끼를 지웠습니다'],
+  '框选抠图':['Select to cut out','영역 선택 누끼'],'在画面上选':['on the canvas','화면에서 선택'],'框选':['Box','박스'],'+ 点':['+ Point','+ 점'],'− 点':['− Point','− 점'],'关':['Off','끄기'],
+  '拖一个框圈住要的东西':['Drag a box around what you want','원하는 것을 박스로 감싸세요'],'点要的部分（右键＝不要）':['Click what you want (right-click = not this)','원하는 부분을 클릭 (오른쪽 클릭 = 제외)'],
+  '点不要的部分':['Click what you do not want','필요 없는 부분을 클릭'],'退出框选，回到普通拖动':['Leave selection, back to normal dragging','선택 끄기, 일반 드래그로 돌아가기'],
+  '只留选中':['Keep only','선택만 남기기'],'加进结果':['Add','결과에 추가'],'从结果去掉':['Remove','결과에서 빼기'],
+  '选中的留下，这一帧其他部分变透明':['Keep the selection; the rest of this frame becomes transparent','선택한 부분만 남기고 이 프레임의 나머지는 투명하게'],
+  '选中的部分加回到结果里':['Add the selection back into the result','선택한 부분을 결과에 다시 추가'],'选中的部分变透明':['Make the selection transparent','선택한 부분을 투명하게'],
+  '换个范围':['Other size','다른 범위'],'同一个点，换大一点或小一点的范围':['Same point, a larger or smaller region','같은 점으로 더 크거나 작은 범위'],'清空选区':['Clear selection','선택 지우기'],
+  '所有帧用同样的框 / 点':['Same box / points for all frames','모든 프레임에 같은 박스 / 점'],
+  '选“框选”或“+ 点”，然后在画面上框 / 点（第一次用会下载约 43 MB）。':['Pick “Box” or “+ Point”, then drag or click on the canvas (first use downloads about 43 MB).','“박스”나 “+ 점”을 고른 뒤 화면에서 드래그하거나 클릭하세요 (처음 한 번 약 43 MB 다운로드).'],
+  '在画面上拖一个框，圈住要的东西。':['Drag a box around what you want on the canvas.','화면에서 원하는 것을 박스로 감싸세요.'],
+  '点要的部分；右键点＝不要的部分。':['Click what you want; right-click what you do not want.','원하는 부분을 클릭하고, 필요 없는 부분은 오른쪽 클릭하세요.'],
+  '范围 {0} / {1} · 再加点可以修正 · Esc 清空':['Region {0} / {1} · add points to refine · Esc clears','범위 {0} / {1} · 점을 더 찍어 수정 · Esc 지우기'],
+  '正在识别…':['Detecting…','인식 중…'],
+  '已取消':['Cancelled','취소했습니다'],
+  '修边':['Edges','가장자리 다듬기'],'去掉边缘多余的':['remove leftovers at the edge','가장자리 남은 것 지우기'],'边缘收缩':['Shrink edge','가장자리 줄이기'],
+  '擦除':['Erase','지우기'],'恢复':['Restore','복원'],'画笔大小':['Brush size','브러시 크기'],
+  '在画面上涂：涂到的地方变透明':['Paint on the canvas: painted areas become transparent','화면에 칠하기: 칠한 곳이 투명해집니다'],
+  '在画面上涂：涂到的地方恢复原图':['Paint on the canvas: painted areas come back from the original','화면에 칠하기: 칠한 곳이 원본으로 돌아옵니다'],
+  '退出画笔，回到普通拖动':['Leave the brush, back to normal dragging','브러시 끄기, 일반 드래그로 돌아가기'],
+  '边缘有一圈灰边 / 杂色：把“边缘收缩”调到 1–3 px。零星的小点：调“去小碎块”。边缘发暗 / 带原背景的颜色：勾“去色边”。邻居的碎块、零碎残留：用“擦除”直接涂掉，涂错了用“恢复”涂回来。每一帧单独改，不影响别的帧；Ctrl+Z 撤销，Ctrl+Y 重做。':['A grey or coloured ring around the edge: set “Shrink edge” to 1–3 px. Scattered dots: use “Remove specks”. Dark edges or the old background’s tint: tick “Clean edge colour”. Bits of a neighbouring sprite or other leftovers: paint them away with “Erase”, and paint mistakes back with “Restore”. Each frame is edited on its own; Ctrl+Z undoes, Ctrl+Y redoes.','가장자리에 회색 / 색 테두리가 남으면 “가장자리 줄이기”를 1–3 px로. 자잘한 점은 “작은 조각 제거”. 가장자리가 어둡거나 원래 배경색이 남으면 “가장자리 색 정리”를 체크. 옆 스프라이트 조각이나 잔여물은 “지우기”로 칠해서 없애고, 잘못 지운 곳은 “복원”으로 되돌리세요. 프레임마다 따로 수정되며 Ctrl+Z 되돌리기, Ctrl+Y 다시 실행.'],
+  '已撤销抠图修改':['Cutout edit undone','누끼 수정을 되돌렸습니다'],'已重做抠图修改':['Cutout edit redone','누끼 수정을 다시 적용했습니다'],
+  '去小碎块':['Remove specks','작은 조각 제거'],'小于 {0} px':['under {0} px','{0} px 미만'],'去色边':['Clean edge colour','가장자리 색 정리'],'画笔硬度':['Brush hardness','브러시 경도'],
+  '预览底色':['Preview background','미리보기 배경'],'棋盘':['Checker','체크'],'黑':['Black','검정'],'白':['White','흰색'],'绿':['Green','초록'],
+  '和主体不连着、面积小于这个的碎块都去掉':['Removes every blob not connected to the subject that is smaller than this','본체와 떨어져 있고 이보다 작은 조각을 모두 지웁니다'],
+  '半透明的边缘像素改用旁边不透明像素的颜色，去掉原背景留下的色边':['Semi-transparent edge pixels take the colour of nearby opaque pixels, removing the old background’s tint','반투명한 가장자리 픽셀에 옆 불투명 픽셀의 색을 써서, 원래 배경이 남긴 색 테두리를 없앱니다'],'模型文件不完整：{0}':['Model file is incomplete: {0}','모델 파일이 불완전합니다: {0}'],
+  '正在加载模型 {0} / {1} MB':['Loading model {0} / {1} MB','모델 불러오는 중 {0} / {1} MB'],
+  '这个文件夹里没有 manifest.json，请选 models 文件夹':['This folder has no manifest.json; pick the models folder','이 폴더에 manifest.json이 없습니다. models 폴더를 선택하세요'],
+  '连不上网站，这台电脑上也还没有模型。可以选电脑上的 models 文件夹，或者联网后再试。':['Cannot reach the website, and this computer has no models yet. Pick a models folder on this computer, or try again when online.','웹사이트에 연결할 수 없고 이 컴퓨터에도 아직 모델이 없습니다. 컴퓨터의 models 폴더를 고르거나 인터넷에 연결한 뒤 다시 시도하세요.'],
+  'AI 功能要先下载模型（约 {0} MB）。只需要一次，之后保存在这个浏览器里，没网也能用。':['AI features need to download the models first (about {0} MB). Only once: they stay in this browser and work offline after that.','AI 기능을 쓰려면 먼저 모델을 내려받아야 합니다 (약 {0} MB). 한 번만 받으면 이 브라우저에 저장되어 인터넷 없이도 쓸 수 있습니다.'],
+  '使用本机文件夹：{0}':['Using local folder: {0}','로컬 폴더 사용: {0}'],'还没下载：第一次使用时会先问你。':['Not downloaded yet; you will be asked on first use.','아직 받지 않았습니다. 처음 쓸 때 물어봅니다.'],
+  '模型已全部保存在这个浏览器里，没网也能用。':['All models are saved in this browser and work offline.','모든 모델이 이 브라우저에 저장되어 인터넷 없이도 쓸 수 있습니다.'],
+  '已保存一部分模型，其余的用到时再下载。':['Some models are saved; the rest download when needed.','일부 모델이 저장되어 있고, 나머지는 필요할 때 받습니다.'],
+  '已选模型文件夹：{0}':['Model folder selected: {0}','모델 폴더를 선택했습니다: {0}'],'正在打包…':['Packing…','묶는 중…'],
+  '已保存：解压后用“选本机文件夹”选 models':['Saved: unzip it, then use “Local folder…” to pick models','저장했습니다: 압축을 푼 뒤 “로컬 폴더…”로 models를 고르세요'],
+  '点“一键去背景”，背景自动变透明。':['Click “Remove background” and the background becomes transparent.','“배경 제거”를 누르면 배경이 투명해집니다.'],
+  '选“框选”或“+ 点”，然后在画面上框 / 点。':['Pick “Box” or “+ Point”, then drag or click on the canvas.','“박스”나 “+ 점”을 고른 뒤 화면에서 드래그하거나 클릭하세요.'],
+  'AI 模型':['AI models','AI 모델'],'只在电脑上':['desktop only','PC 전용'],'选本机文件夹…':['Local folder…','로컬 폴더…'],'存到电脑（zip）':['Save to PC (zip)','PC에 저장 (zip)'],
+  '没网的电脑：选从别处拷来的 models 文件夹':['Offline computer: pick a models folder copied from elsewhere','인터넷 없는 컴퓨터: 다른 곳에서 복사한 models 폴더 선택'],
+  '把全部模型打包下载，存在电脑上或拷给别的电脑':['Download all models as one zip to keep or copy to another computer','모든 모델을 zip 하나로 받아 보관하거나 다른 컴퓨터로 복사'],
+  '模型在你的电脑上运行，图片不会上传。第一次用时从网站自动下载，之后保存在浏览器里。':['The models run on your computer and images are never uploaded. They download from the website on first use and then stay in the browser.','모델은 내 컴퓨터에서 실행되며 이미지는 업로드되지 않습니다. 처음 쓸 때 웹사이트에서 자동으로 받고, 그 뒤로는 브라우저에 저장됩니다.'],
+  '没网的电脑：在有网的电脑上点“存到电脑（zip）”，把解压出来的 models 文件夹拷过去，再点“用电脑上的模型文件夹”。':['Offline computer: on a computer with internet click “Save to PC (zip)”, copy the unzipped models folder over, then choose “Use a models folder on this PC”.','인터넷 없는 컴퓨터: 인터넷 되는 컴퓨터에서 “PC에 저장 (zip)”을 누르고, 압축을 푼 models 폴더를 복사한 뒤 “PC의 모델 폴더 사용”을 고르세요.'],
+  '用电脑上的模型文件夹…':['Use a models folder on this PC…','PC의 모델 폴더 사용…'],'自动下载（推荐）':['Download automatically (recommended)','자동으로 받기 (추천)'],
+  '框内拖原图（框不动）':['Drag the image inside the box','박스 안에서 원본 이미지 드래그'],
+  '小图被截掉时用：框内拖＝移动原图，拖边角＝放大 / 缩小框（图不缩放）。不勾时按住 Ctrl 拖也一样。':['For cut-off sprites: drag inside = move the source image, drag edges / corners = grow or shrink the box (no scaling). Without the tick, Ctrl+drag does the same.','잘린 스프라이트용: 박스 안 드래그 = 원본 이미지 이동, 모서리 / 가장자리 드래그 = 박스 크기 조절 (확대·축소 없음). 체크하지 않아도 Ctrl+드래그로 같은 동작.'],
+  '原图位置 {0}, {1} · 框 {2}×{3}':['Source at {0}, {1} · box {2}×{3}','원본 위치 {0}, {1} · 박스 {2}×{3}'],'已应用到 {0} 帧':['Applied to {0} frames','{0}프레임에 적용했습니다'],
 };
 const LANGS=['zh','en','ko'];
 let LANG=(()=>{try{const s=localStorage.getItem('sprite-align-lang');if(LANGS.includes(s))return s}catch(e){}const n=(navigator.language||'').toLowerCase();return n.startsWith('ko')?'ko':n.startsWith('en')?'en':'zh'})();
 function T(s,...a){const e=I18N[s];const r=LANG==='zh'||!e?s:e[LANG==='en'?0:1];return r.replace(/\{(\d)\}/g,(_,i)=>a[i])}
 // Static text: remember each node's Chinese original once, then swap it in place. Dynamic areas are re-rendered by syncAll().
-const DYNAMIC='script,style,#frames,#guides,#status,#fsize,#impSummary,#impFiles,#impList,#exInfo,#exBlender,#stFrame,#stCell,#stZoom,#frameCount,#zoomPct,#toast,#play,#impCap';
+const DYNAMIC='script,style,#frames,#guides,#status,#fsize,#impSummary,#impFiles,#impList,#exInfo,#exBlender,#exAnimInfo,#stFrame,#stCell,#stZoom,#frameCount,#zoomPct,#toast,#play,#impCap,#cutGo,#cutState,#samState,#aiStatus,#aiMsg,#cutSpeckV';
 const ORIG=new WeakMap();
 function translatePage(){
   const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
@@ -767,14 +949,17 @@ function translatePage(){
 function setLang(l){
   LANG=l;try{localStorage.setItem('sprite-align-lang',l)}catch(e){}
   translatePage();$('play').textContent=T(playing?'■ 停止':'▶ 播放');syncAll();
+  if(CUT.busy)$('cutGo').textContent=T('停止');else cutStateIdle();
+  samStateIdle();aiStatus();syncCutUI();
   if($('importDlg').open){$('impCap').textContent=T('一次最多 {0} 帧（GIF / 视频）',MAX_MOTION_FRAMES);$('impFiles').textContent=imp.files.length===1?imp.files[0].name:T('{0} 个文件',imp.files.length);drawImportPreview()}
 }
 // ------------------------------------------------------------------ state
 const S={
   cellW:256,cellH:256,frames:[],images:{},guides:[],sel:-1,base:0,mode:'align',
-  showCenter:true,safe:0,snap:true,onBase:true,onPrev:false,onAlpha:.35,pixel:false,
+  showCenter:true,safe:0,snap:true,alignBy:'box',onBase:true,onPrev:false,onAlpha:.35,pixel:false,
   lockGuides:false,hideGuides:false,refId:null,refAlpha:.4,refTop:false,selGuide:-1,
-  ex:{layout:'grid',cols:3,margin:0,pad:0,px:.5,py:.5,json:false,tres:false}
+  cut:{use:true,hard:false,shrink:0,speck:0,defringe:false,bg:''},masks:{},
+  ex:exDefaults()
 };
 let uid=1;
 const $=id=>document.getElementById(id);
@@ -786,6 +971,7 @@ function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show')
 function status(msg){$('status').textContent=msg}
 function cur(){return S.frames[S.sel]}
 function img(f){return S.images[f.imageId]}
+
 function naturalKey(a,b){return a.localeCompare(b,undefined,{numeric:true,sensitivity:'base'})}
 
 // ------------------------------------------------------------------ undo
@@ -816,13 +1002,13 @@ function addImage(name,dataURL,id){
   });
 }
 // Bounding box of visible pixels inside a crop rect, in crop coordinates.
-function contentBox(imageId,c){
-  const key=imageId+'|'+c.x+','+c.y+','+c.w+','+c.h;
+function contentBox(imageId,c,f){
+  const C=f&&frameCut(f),key=imageId+'|'+c.x+','+c.y+','+c.w+','+c.h+(C?'|'+f.id+'|'+C.key:'');
   if(bboxCache.has(key))return bboxCache.get(key);
   const I=S.images[imageId];let box={x0:0,y0:0,x1:c.w,y1:c.h,empty:false};
   try{
     const o=document.createElement('canvas');o.width=c.w;o.height=c.h;
-    const g=o.getContext('2d',{willReadFrequently:true});g.drawImage(I.el,c.x,c.y,c.w,c.h,0,0,c.w,c.h);
+    const g=o.getContext('2d',{willReadFrequently:true});if(C)g.drawImage(C,0,0);else g.drawImage(I.el,c.x,c.y,c.w,c.h,0,0,c.w,c.h);
     const d=g.getImageData(0,0,c.w,c.h).data;
     let x0=c.w,y0=c.h,x1=-1,y1=-1;
     for(let y=0;y<c.h;y++){const row=y*c.w*4;for(let x=0;x<c.w;x++){if(d[row+x*4+3]>8){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}}}
@@ -836,7 +1022,7 @@ function contentBox(imageId,c){
 function newFrame(imageId,crop){return{id:'f'+(uid++),imageId,crop:{...crop},home:{...crop},tx:0,ty:0,sx:1,sy:1}}
 function toCell(f,px,py){return[S.cellW/2+f.tx+(px-f.crop.x-f.crop.w/2)*f.sx,S.cellH/2+f.ty+(py-f.crop.y-f.crop.h/2)*f.sy]}
 function contentRect(f){
-  const b=contentBox(f.imageId,f.crop);
+  const b=contentBox(f.imageId,f.crop,f);
   const [x0,y0]=toCell(f,f.crop.x+b.x0,f.crop.y+b.y0),[x1,y1]=toCell(f,f.crop.x+b.x1,f.crop.y+b.y1);
   return{x0,y0,x1,y1,cx:(x0+x1)/2,cy:(y0+y1)/2,w:x1-x0,h:y1-y0};
 }
@@ -852,15 +1038,34 @@ const isBox=g=>g.type==='rect'||g.type==='ellipse';
 function gbox(g){return{x:(S.cellW-g.w)/2,y:(S.cellH-g.h)/2,w:g.w,h:g.h}}
 function pickBox(){const g=S.guides[S.selGuide];return g&&isBox(g)?g:S.guides.find(isBox)}
 // Whole displayed frame (crop rect) in cell coordinates; the blue box with handles.
-function frameRect(f){const w=f.crop.w*f.sx,h=f.crop.h*f.sy,cx=S.cellW/2+f.tx,cy=S.cellH/2+f.ty;return{x0:cx-w/2,y0:cy-h/2,x1:cx+w/2,y1:cy+h/2,cx,cy,w,h}}
+// The blue box is the crop plus an optional transparent margin (f.pad, source px), so the content can move or
+// scale inside a box that stays put without showing more of the source image.
+const fpad=f=>f.pad||{l:0,t:0,r:0,b:0};
+function frameRect(f){
+  const p=fpad(f),cx=S.cellW/2+f.tx,cy=S.cellH/2+f.ty;
+  const x0=cx-(f.crop.w/2+p.l)*f.sx,x1=cx+(f.crop.w/2+p.r)*f.sx,y0=cy-(f.crop.h/2+p.t)*f.sy,y1=cy+(f.crop.h/2+p.b)*f.sy;
+  return{x0,y0,x1,y1,cx:(x0+x1)/2,cy:(y0+y1)/2,w:x1-x0,h:y1-y0};
+}
+// Keep the blue box exactly at F (cell px) wherever the content now is. The margin may be negative: the box
+// only marks the frame, it never clips the content (export uses the whole cell).
+function keepBox(f,F){
+  const cx=S.cellW/2+f.tx,cy=S.cellH/2+f.ty,hw=f.crop.w/2,hh=f.crop.h/2;
+  const p={l:(cx-F.x0)/f.sx-hw,r:(F.x1-cx)/f.sx-hw,t:(cy-F.y0)/f.sy-hh,b:(F.y1-cy)/f.sy-hh};
+  f.pad=Math.abs(p.l)>.01||Math.abs(p.r)>.01||Math.abs(p.t)>.01||Math.abs(p.b)>.01?p:null;
+}
 function boxHandles(f){
   const r=frameRect(f),xs=[sx_(r.x0),sx_(r.cx),sx_(r.x1)],ys=[sy_(r.y0),sy_(r.cy),sy_(r.y1)];
   return[[-1,-1],[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0]].map(([hx,hy])=>[xs[hx+1],ys[hy+1],hx,hy]);
 }
 const HANDLE_CURSOR={'-1,-1':'nwse-resize','1,1':'nwse-resize','1,-1':'nesw-resize','-1,1':'nesw-resize','0,-1':'ns-resize','0,1':'ns-resize','-1,0':'ew-resize','1,0':'ew-resize'};
+// Handles on the dashed box (opaque content): resize anchored at the content's own edges.
+function contentHandles(f){
+  const r=contentRect(f),xs=[sx_(r.x0),sx_(r.cx),sx_(r.x1)],ys=[sy_(r.y0),sy_(r.cy),sy_(r.y1)];
+  return[[-1,-1],[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0]].map(([hx,hy])=>[xs[hx+1],ys[hy+1],hx,hy]);
+}
+function hitContent(mx,my){const f=cur();if(!f||playing)return null;return contentHandles(f).find(([x,y])=>Math.abs(x-mx)<TOL&&Math.abs(y-my)<TOL)||null}
 function hitBox(mx,my){const f=cur();if(!f||playing)return null;return boxHandles(f).find(([x,y])=>Math.abs(x-mx)<TOL&&Math.abs(y-my)<TOL)||null}
-function trimCrop(f){const b=contentBox(f.imageId,f.crop);if(b.empty)return;setCrop(f,{x:f.crop.x+b.x0,y:f.crop.y+b.y0,w:b.x1-b.x0,h:b.y1-b.y0})}
-function scaleAboutContent(f,kx,ky){const a=contentRect(f);f.sx*=kx;f.sy*=ky;const b=contentRect(f);f.tx+=a.cx-b.cx;f.ty+=a.cy-b.cy}
+function trimCrop(f){const b=contentBox(f.imageId,f.crop,f);if(b.empty)return;setCrop(f,{x:f.crop.x+b.x0,y:f.crop.y+b.y0,w:b.x1-b.x0,h:b.y1-b.y0})}
 function fitScale(f){const k=Math.min(1,S.cellW/f.crop.w,S.cellH/f.crop.h);f.sx=f.sy=k}
 
 function drawFrame(g,f,alpha){
@@ -868,7 +1073,9 @@ function drawFrame(g,f,alpha){
   const w=f.crop.w*f.sx,h=f.crop.h*f.sy;
   g.save();g.globalAlpha=alpha==null?1:alpha;
   g.imageSmoothingEnabled=!S.pixel;g.imageSmoothingQuality='high';
-  g.drawImage(I.el,f.crop.x,f.crop.y,f.crop.w,f.crop.h,S.cellW/2+f.tx-w/2,S.cellH/2+f.ty-h/2,w,h);
+  const C=frameCut(f);
+  if(C)g.drawImage(C,0,0,C.width,C.height,S.cellW/2+f.tx-w/2,S.cellH/2+f.ty-h/2,w,h);
+  else g.drawImage(I.el,f.crop.x,f.crop.y,f.crop.w,f.crop.h,S.cellW/2+f.tx-w/2,S.cellH/2+f.ty-h/2,w,h);
   g.restore();
 }
 
@@ -887,21 +1094,24 @@ async function importImages(files){
   commit();syncAll();fitView();toast(T('已导入 {0} 帧',added.length));
 }
 async function importSheet(file){
-  const cols=Math.max(1,+$('sheetCols').value|0),rows=Math.max(1,+$('sheetRows').value|0);
   let I;try{I=await loadFile(file)}catch(e){toast(e.message);return}
-  const first=!S.frames.length,added=[];
-  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
-    const x0=Math.round(c*I.w/cols),x1=Math.round((c+1)*I.w/cols),y0=Math.round(r*I.h/rows),y1=Math.round((r+1)*I.h/rows);
-    const f=newFrame(I.id,{x:x0,y:y0,w:x1-x0,h:y1-y0});
-    if($('skipEmpty').checked&&contentBox(I.id,f.crop).empty)continue;
+  const auto=imp.how==='auto',cells=sheetCells(I.el),{cols,rows}=cells.layout,first=!S.frames.length,added=[];
+  for(const r of cells){
+    const f=newFrame(I.id,r);
+    if(!auto&&$('skipEmpty').checked&&contentBox(I.id,f.crop).empty)continue;
     added.push(f);
   }
-  if(!added.length){toast(T('这张图的格子都是透明的'));return}
-  if(first){S.cellW=Math.round(I.w/cols);S.cellH=Math.round(I.h/rows)}
+  if(!added.length){toast(T(auto?'这张图里没有识别到图形':'这张图的格子都是透明的'));return}
+  if(first){
+    if(auto){S.cellW=Math.max(...added.map(f=>f.crop.w));S.cellH=Math.max(...added.map(f=>f.crop.h))}
+    else{S.cellW=cells[0].w;S.cellH=cells[0].h}
+  }
   added.forEach(f=>{fitScale(f);if($('autoTrim').checked)trimCrop(f)});
+  // separate sprites stand on the cell's bottom edge (feet aligned), centred horizontally
+  if(auto)added.forEach(f=>{f.ty=(S.cellH-f.crop.h*f.sy)/2});
   S.frames.push(...added);if(S.sel<0)S.sel=0;
-  S.ex.cols=cols;
-  commit();syncAll();fitView();toast(T('精灵表已切成 {0} 帧（{1}×{2}）',added.length,cols,rows));
+  S.ex.cols=Math.max(1,cols);
+  commit();syncAll();fitView();toast(auto?T('识别出 {0} 块，已导入 {0} 帧',added.length):T('精灵表已切成 {0} 帧（{1}×{2}）',added.length,cols,rows));
 }
 
 // GIF / video: every picked frame becomes an image, then a frame like an imported single image.
@@ -1037,12 +1247,15 @@ async function videoFrames(file){
 
 // ------------------------------------------------------------------ alignment actions
 function targets(){return $('applyAll').checked?S.frames:(cur()?[cur()]:[])}
+// What the quick-align buttons measure: the blue box, or only the opaque content (dashed box).
+const alignRect=f=>S.alignBy==='content'?contentRect(f):frameRect(f);
+function scaleAbout(f,kx,ky){const a=alignRect(f);f.sx*=kx;f.sy*=ky;const b=alignRect(f);f.tx+=a.cx-b.cx;f.ty+=a.cy-b.cy}
 function align(kind){
   const base=S.frames[S.base],c=cur();if(!c)return;
-  const B=base?contentRect(base):null,box=pickBox();
+  const B=base?alignRect(base):null,box=pickBox();
   if(kind.startsWith('fitBox')&&!box){toast(T('先在“参考线”页加一个大小框'));return}
   for(const f of targets()){
-    const R=contentRect(f);
+    const R=alignRect(f);
     switch(kind){
       case 'center':f.tx+=S.cellW/2-R.cx;f.ty+=S.cellH/2-R.cy;break;
       case 'centerH':f.tx+=S.cellW/2-R.cx;break;
@@ -1050,17 +1263,17 @@ function align(kind){
       case 'baseCenter':if(B){f.tx+=B.cx-R.cx;f.ty+=B.cy-R.cy}break;
       case 'baseBottom':if(B)f.ty+=B.y1-R.y1;break;
       case 'baseTop':if(B)f.ty+=B.y0-R.y0;break;
-      case 'baseHeight':if(B&&R.h>0){const k=B.h/R.h;scaleAboutContent(f,k,k)}break;
-      case 'baseWidth':if(B&&R.w>0){const k=B.w/R.w;scaleAboutContent(f,k,k)}break;
-      case 'copyScale':if(f!==c){const kx=c.sx/f.sx,ky=c.sy/f.sy;scaleAboutContent(f,kx,ky)}break;
+      case 'baseHeight':if(B&&R.h>0){const k=B.h/R.h;scaleAbout(f,k,k)}break;
+      case 'baseWidth':if(B&&R.w>0){const k=B.w/R.w;scaleAbout(f,k,k)}break;
+      case 'copyScale':if(f!==c){const kx=c.sx/f.sx,ky=c.sy/f.sy;scaleAbout(f,kx,ky)}break;
       // Size box: scale the drawing to the box, then centre it (the box is always in the middle of the cell).
       case 'fitBox':case 'fitBoxW':case 'fitBoxH':{
-        if(R.w>0&&R.h>0){const k=kind==='fitBoxW'?box.w/R.w:kind==='fitBoxH'?box.h/R.h:Math.min(box.w/R.w,box.h/R.h);scaleAboutContent(f,k,k)}
-        const N=contentRect(f);f.tx+=S.cellW/2-N.cx;f.ty+=S.cellH/2-N.cy;break;
+        if(R.w>0&&R.h>0){const k=kind==='fitBoxW'?box.w/R.w:kind==='fitBoxH'?box.h/R.h:Math.min(box.w/R.w,box.h/R.h);scaleAbout(f,k,k)}
+        const N=alignRect(f);f.tx+=S.cellW/2-N.cx;f.ty+=S.cellH/2-N.cy;break;
       }
       // The same relative point of the content (e.g. bottom-centre = feet) lands on the export pivot.
       case 'pivot':f.tx+=S.ex.px*S.cellW-(R.x0+S.ex.px*R.w);f.ty+=S.ex.py*S.cellH-(R.y0+S.ex.py*R.h);break;
-      case 'reset':f.crop={...f.home};f.tx=f.ty=0;fitScale(f);break;
+      case 'reset':f.crop={...f.home};f.tx=f.ty=0;f.pad=null;fitScale(f);break;
     }
   }
   commit();syncAll();
@@ -1085,6 +1298,8 @@ const wx=x=>(x-V().ox)/V().z, wy=y=>(y-V().oy)/V().z;
 
 function css(name){return getComputedStyle(document.documentElement).getPropertyValue(name).trim()}
 function checker(g,x,y,w,h){
+  // A solid preview colour (cutout page) shows leftover edges and specks that hide in the checkerboard.
+  if(S.cut.bg){g.save();g.fillStyle=S.cut.bg;g.fillRect(x,y,w,h);g.restore();return}
   g.save();g.beginPath();g.rect(x,y,w,h);g.clip();
   const dark=effectiveTheme()==='dark';
   g.fillStyle=dark?'#2a2a2e':'#cfcfcb';g.fillRect(x,y,w,h);g.fillStyle=dark?'#343439':'#e6e6e3';
@@ -1112,7 +1327,7 @@ function drawAlign(){
   else{
     if(S.onBase&&S.frames[S.base]&&S.base!==S.sel)drawFrame(ctx,S.frames[S.base],S.onAlpha);
     if(S.onPrev&&S.sel>0&&S.sel-1!==S.base)drawFrame(ctx,S.frames[S.sel-1],S.onAlpha*.8);
-    if(cur())drawFrame(ctx,cur());
+    if(cur()){drawFrame(ctx,cur());samOverlay(ctx,cur())}
   }
   if(S.refTop)drawRef();
   ctx.restore();
@@ -1140,9 +1355,15 @@ function drawAlign(){
     ctx.save();ctx.strokeStyle=css('--accent');ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);
     ctx.moveTo(x-10,y);ctx.lineTo(x-6,y);ctx.moveTo(x+6,y);ctx.lineTo(x+10,y);ctx.moveTo(x,y-10);ctx.lineTo(x,y-6);ctx.moveTo(x,y+6);ctx.lineTo(x,y+10);ctx.stroke();ctx.restore();
   }
+  if(cur()&&!playing&&($('dragSrc').checked||drag&&(drag.kind==='slide'||drag.kind==='window')))drawSourceGhost(cur());
   if(cur()&&!playing){
     const f=cur(),R=contentRect(f),F=frameRect(f),acc=css('--accent');
     ctx.save();ctx.strokeStyle=acc;ctx.globalAlpha=.6;ctx.setLineDash([4,3]);ctx.lineWidth=1;rectG(R.x0,R.y0,R.w,R.h);ctx.restore();
+    if(!$('dragSrc').checked&&R.w*V().z>12&&R.h*V().z>12){
+      ctx.save();ctx.fillStyle=acc;ctx.strokeStyle='rgba(0,0,0,.6)';ctx.lineWidth=1;const s=HS-.5;
+      for(const [x,y] of contentHandles(f)){ctx.fillRect(x-s,y-s,s*2,s*2);ctx.strokeRect(x-s,y-s,s*2,s*2)}
+      ctx.restore();
+    }
     ctx.save();ctx.strokeStyle=acc;ctx.lineWidth=1.5;ctx.strokeRect(sx_(F.x0),sy_(F.y0),F.w*V().z,F.h*V().z);
     ctx.fillStyle='#fff';for(const [x,y] of boxHandles(f)){ctx.fillRect(x-HS,y-HS,HS*2,HS*2);ctx.strokeRect(x-HS,y-HS,HS*2,HS*2)}
     ctx.restore();
@@ -1150,6 +1371,15 @@ function drawAlign(){
   ctx.save();ctx.strokeStyle='#39e07a';ctx.lineWidth=1.5;
   for(const s of snapLines){if(s.axis==='x')line(s.v,-H*.05,s.v,H*1.05);else line(-W*.05,s.v,W*1.05,s.v)}
   ctx.restore();
+  samMarks();brushMarks();
+}
+// The rest of the source image, faint, around the box: shows what a cut-off sprite is missing.
+function drawSourceGhost(f){
+  const I=img(f),F=frameRect(f),v=V(),z=v.z;
+  const x=sx_(S.cellW/2+f.tx-(f.crop.w/2+f.crop.x)*f.sx),y=sy_(S.cellH/2+f.ty-(f.crop.h/2+f.crop.y)*f.sy);
+  ctx.save();ctx.beginPath();ctx.rect(0,0,cv.width,cv.height);ctx.rect(sx_(F.x0),sy_(F.y0),F.w*z,F.h*z);ctx.clip('evenodd');
+  ctx.globalAlpha=.35;ctx.imageSmoothingEnabled=!S.pixel;ctx.drawImage(I.el,x,y,I.w*f.sx*z,I.h*f.sy*z);
+  ctx.globalAlpha=1;ctx.strokeStyle=css('--faint');ctx.setLineDash([3,3]);ctx.strokeRect(x+.5,y+.5,I.w*f.sx*z,I.h*f.sy*z);ctx.restore();
 }
 function line(x0,y0,x1,y1){ctx.beginPath();ctx.moveTo(Math.round(sx_(x0))+.5,Math.round(sy_(y0))+.5);ctx.lineTo(Math.round(sx_(x1))+.5,Math.round(sy_(y1))+.5);ctx.stroke()}
 function rectG(x,y,w,h){ctx.strokeRect(Math.round(sx_(x))+.5,Math.round(sy_(y))+.5,Math.round(w*V().z),Math.round(h*V().z))}
@@ -1205,41 +1435,102 @@ cv.addEventListener('pointerdown',e=>{
   const [mx,my]=mpos(e);
   if(e.button===1||(e.button===0&&spaceDown)){drag={kind:'pan',mx,my,ox:V().ox,oy:V().oy};e.preventDefault();return}
   if(playing){stopPlay();return}
+  if(brushActive()&&cur()&&e.button===0){brushDown(mx,my);return}
+  if(samActive()&&cur()&&(e.button===0||e.button===2)){samDown(e,mx,my);return}
   if(e.button!==0||!cur())return;
   const f=cur();
   if(S.mode==='crop'){
     const h=cropHandles(f).find(([hx,hy])=>Math.abs(hx-mx)<TOL&&Math.abs(hy-my)<TOL);
-    const px=wx(mx),py=wy(my),c=f.crop,inside=px>=c.x&&px<=c.x+c.w&&py>=c.y&&py<=c.y+c.h;
-    drag={kind:'crop',part:h?h[2]:(inside?'move':'new'),px,py,start:JSON.parse(JSON.stringify(f))};return;
+    const px=wx(mx),py=wy(my),c=f.crop,inBox=c=>px>=c.x&&px<=c.x+c.w&&py>=c.y&&py<=c.y+c.h,inside=inBox(c);
+    // Another frame's dashed box under the pointer (topmost first).
+    const other=h||inside?null:S.frames.slice().reverse().find(o=>o!==f&&o.imageId===f.imageId&&inBox(o.crop));
+    if(other&&($('cropOthers').checked||e.shiftKey)){
+      S.sel=S.frames.indexOf(other);syncAll();
+      drag={kind:'crop',part:'move',px,py,start:JSON.parse(JSON.stringify(other))};draw();return;
+    }
+    drag={kind:'crop',part:h?h[2]:(inside?'move':'new'),px,py,start:JSON.parse(JSON.stringify(f)),other};return;
   }
-  const h=hitBox(mx,my);
+  const h=hitBox(mx,my),src=$('dragSrc').checked||e.ctrlKey;
+  if(h&&src){drag={kind:'window',hx:h[2],hy:h[3],r0:frameRect(f),px:wx(mx),py:wy(my),start:JSON.parse(JSON.stringify(f))};draw();return}
   if(h){drag={kind:'scale',hx:h[2],hy:h[3],r0:frameRect(f),sx:f.sx,sy:f.sy};return}
+  const ch=!src&&hitContent(mx,my);
+  if(ch){const r0=contentRect(f);if(r0.w>=1&&r0.h>=1){drag={kind:'cscale',hx:ch[2],hy:ch[3],r0,sx:f.sx,sy:f.sy,b:contentBox(f.imageId,f.crop,f),crop:{...f.crop},F:frameRect(f)};return}}
+  if(src){const r=frameRect(f),x=wx(mx),y=wy(my);if(x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1){drag={kind:'slide',px:x,py:y,crop:{...f.crop}};cv.style.cursor='grabbing';draw();return}}
   const g=hitGuide(mx,my);
   if(g){S.selGuide=g.i;drag={kind:'guide',...g,px:wx(mx),py:wy(my),start:{...S.guides[g.i]}};renderGuides();draw();return}
-  drag={kind:'frame',px:wx(mx),py:wy(my),tx:f.tx,ty:f.ty};
+  // Inside the dashed box: move only the content (the blue box stays). Elsewhere in the blue box: move both.
+  {const R=contentRect(f),x=wx(mx),y=wy(my);if(R.w>0&&x>=R.x0&&x<=R.x1&&y>=R.y0&&y<=R.y1){drag={kind:'frame',px:x,py:y,tx:f.tx,ty:f.ty,F:frameRect(f)};return}}
+  drag={kind:'frame',px:wx(mx),py:wy(my),tx:f.tx,ty:f.ty,B0:frameRect(f)};
 });
 window.addEventListener('pointermove',e=>{
   if(pointers.has(e.pointerId))pointers.set(e.pointerId,mpos(e));
   if(pinch){if(pointers.size>=2)movePinch();return}
   if(!drag)return;const [mx,my]=mpos(e),f=cur();
   if(drag.kind==='pan'){V().ox=drag.ox+mx-drag.mx;V().oy=drag.oy+my-drag.my;V().fit=false;draw();return}
+  if(drag.kind==='samBox'){[drag.u1,drag.v1]=samSrc(f,mx,my);draw();return}
+  if(drag.kind==='brush'){const p=cropPt(f,mx,my);brushDab(f,drag.last,p);drag.last=p;BR.mouse=[mx,my];draw();return}
   const px=wx(mx),py=wy(my),dx=px-drag.px,dy=py-drag.py;
   if(drag.kind==='scale'){
     // Corners scale evenly, edges stretch one side; Shift swaps the two. The opposite side stays put.
     const r=drag.r0,hx=drag.hx,hy=drag.hy,corner=!!(hx&&hy),even=corner!==e.shiftKey;
-    let w=r.w,h=r.h;
-    if(hx>0)w=px-r.x0;else if(hx<0)w=r.x1-px;
-    if(hy>0)h=py-r.y0;else if(hy<0)h=r.y1-py;
+    let w=r.w,h=r.h,qx=px,qy=py;snapLines=[];
+    if(S.snap&&!e.altKey){
+      const C=snapCands(),sx=hx&&snapOne(px,C.xs),sy=hy&&snapOne(py,C.ys);
+      if(sx){qx=sx.v;snapLines.push({axis:'x',v:sx.v})}
+      if(sy){qy=sy.v;snapLines.push({axis:'y',v:sy.v})}
+    }
+    if(hx>0)w=qx-r.x0;else if(hx<0)w=r.x1-qx;
+    if(hy>0)h=qy-r.y0;else if(hy<0)h=r.y1-qy;
     w=Math.max(1,w);h=Math.max(1,h);
     if(even){const k=corner?Math.max(w/r.w,h/r.h):(hx?w/r.w:h/r.h);w=r.w*k;h=r.h*k}
     f.sx=drag.sx*w/r.w;f.sy=drag.sy*h/r.h;
-    f.tx=(hx>0?r.x0+w/2:hx<0?r.x1-w/2:r.cx)-S.cellW/2;f.ty=(hy>0?r.y0+h/2:hy<0?r.y1-h/2:r.cy)-S.cellH/2;
+    const pd=fpad(f);
+    f.tx=(hx>0?r.x0+w/2:hx<0?r.x1-w/2:r.cx)-S.cellW/2-(pd.r-pd.l)/2*f.sx;f.ty=(hy>0?r.y0+h/2:hy<0?r.y1-h/2:r.cy)-S.cellH/2-(pd.b-pd.t)/2*f.sy;
     status(T('缩放 {0}% × {1}% · {2}×{3} px',Math.round(f.sx*100),Math.round(f.sy*100),Math.round(w),Math.round(h)));
     syncFrameInputs();draw();return;
   }
+  // Dashed box handles: same rules as the blue box, but the content's opposite edge (or centre) stays put.
+  if(drag.kind==='cscale'){
+    const r=drag.r0,hx=drag.hx,hy=drag.hy,corner=!!(hx&&hy),even=corner!==e.shiftKey,b=drag.b,c=drag.crop;
+    let w=r.w,h=r.h,qx=px,qy=py;snapLines=[];
+    if(S.snap&&!e.altKey){
+      const C=snapCands(),sx=hx&&snapOne(px,C.xs),sy=hy&&snapOne(py,C.ys);
+      if(sx){qx=sx.v;snapLines.push({axis:'x',v:sx.v})}
+      if(sy){qy=sy.v;snapLines.push({axis:'y',v:sy.v})}
+    }
+    if(hx>0)w=qx-r.x0;else if(hx<0)w=r.x1-qx;
+    if(hy>0)h=qy-r.y0;else if(hy<0)h=r.y1-qy;
+    w=Math.max(1,w);h=Math.max(1,h);
+    if(even){const k=corner?Math.max(w/r.w,h/r.h):(hx?w/r.w:h/r.h);w=r.w*k;h=r.h*k}
+    f.sx=drag.sx*w/r.w;f.sy=drag.sy*h/r.h;
+    const ax=hx>0?r.x0:hx<0?r.x1:r.cx,ay=hy>0?r.y0:hy<0?r.y1:r.cy;
+    const u=hx>0?b.x0:hx<0?b.x1:(b.x0+b.x1)/2,v=hy>0?b.y0:hy<0?b.y1:(b.y0+b.y1)/2;
+    f.tx=ax-S.cellW/2-(u-c.w/2)*f.sx;f.ty=ay-S.cellH/2-(v-c.h/2)*f.sy;keepBox(f,drag.F);
+    status(T('缩放 {0}% × {1}% · {2}×{3} px',Math.round(f.sx*100),Math.round(f.sy*100),Math.round(w),Math.round(h)));
+    syncFrameInputs();draw();return;
+  }
+  // Slide the source under a fixed box: the crop moves the other way, the box stays where it is.
+  if(drag.kind==='slide'){
+    const I=img(f),c=drag.crop;
+    f.crop={...c,x:Math.round(Math.max(0,Math.min(I.w-c.w,c.x-dx/f.sx))),y:Math.round(Math.max(0,Math.min(I.h-c.h,c.y-dy/f.sy)))};
+    status(T('原图位置 {0}, {1} · 框 {2}×{3}',f.crop.x,f.crop.y,f.crop.w,f.crop.h));syncFrameInputs();draw();return;
+  }
+  // Grow / shrink the box over the source without scaling: an edge of the box is an edge of the crop.
+  if(drag.kind==='window'){
+    const s=drag.start,o=s.crop,ux=dx/s.sx,uy=dy/s.sy;let x0=o.x,y0=o.y,x1=o.x+o.w,y1=o.y+o.h;
+    if(drag.hx<0)x0+=ux;else if(drag.hx>0)x1+=ux;
+    if(drag.hy<0)y0+=uy;else if(drag.hy>0)y1+=uy;
+    if(x1-x0<1||y1-y0<1)return;
+    setCrop(f,{x:x0,y:y0,w:x1-x0,h:y1-y0},s);
+    status(T('原图位置 {0}, {1} · 框 {2}×{3}',f.crop.x,f.crop.y,f.crop.w,f.crop.h));syncFrameInputs();draw();return;
+  }
   if(drag.kind==='frame'){
-    f.tx=Math.round(drag.tx+dx);f.ty=Math.round(drag.ty+dy);snapLines=[];
-    if(S.snap&&!e.altKey)snapFrame(f);
+    // Whole frame: keep the blue box on whole pixels (with a margin the crop centre can sit on a half pixel).
+    if(drag.B0){const b=drag.B0;f.tx=drag.tx+Math.round(b.x0+dx)-b.x0;f.ty=drag.ty+Math.round(b.y0+dy)-b.y0}
+    else{f.tx=Math.round(drag.tx+dx);f.ty=Math.round(drag.ty+dy)}
+    snapLines=[];
+    if(S.snap&&!e.altKey)snapFrame(f,!drag.F);
+    if(drag.F)keepBox(f,drag.F);
     syncFrameInputs();draw();
   }else if(drag.kind==='guide'){
     const g=S.guides[drag.i],s=drag.start;
@@ -1248,6 +1539,8 @@ window.addEventListener('pointermove',e=>{
     else if(g.type==='h')g.y=Math.round(s.y+dy);else if(g.type==='v')g.x=Math.round(s.x+dx);
     syncGuideInputs();draw();
   }else if(drag.kind==='crop'){
+    if(Math.hypot(px-drag.px,py-drag.py)*V().z>3)drag.moved=true;
+    if(drag.other&&!drag.moved)return;
     const s=drag.start,o=s.crop;let x0=o.x,y0=o.y,x1=o.x+o.w,y1=o.y+o.h;const p=drag.part;
     if(p==='move'){x0+=dx;x1+=dx;y0+=dy;y1+=dy}
     else if(p==='new'){x0=Math.min(drag.px,px);x1=Math.max(drag.px,px);y0=Math.min(drag.py,py);y1=Math.max(drag.py,py)}
@@ -1263,6 +1556,10 @@ function pointerEnd(e){
   pointers.delete(e.pointerId);
   if(pinch){if(pointers.size<2)pinch=null;return}
   if(!drag)return;
+  if(drag.kind==='samBox'){const d=drag,[mx,my]=mpos(e);drag=null;samBoxEnd(d,mx,my);return}
+  if(drag.kind==='brush'){drag=null;dirty=true;cutChanged();return}
+  // A click (no drag) on another frame's dashed box switches to that frame.
+  if(drag.kind==='crop'&&drag.other&&!drag.moved){const i=S.frames.indexOf(drag.other);drag=null;if(i>=0){S.sel=i;syncAll();draw()}return}
   const k=drag.kind;drag=null;snapLines=[];if(k!=='pan'){commit();syncAll()}else draw();
 }
 window.addEventListener('pointerup',pointerEnd);
@@ -1276,11 +1573,15 @@ cv.addEventListener('wheel',e=>{
 },{passive:false});
 cv.addEventListener('mousemove',e=>{
   if(drag||spaceDown||S.mode!=='align')return;
+  if(brushActive()){cv.style.cursor='none';return}
+  if(samActive()){cv.style.cursor='crosshair';return}
   const [mx,my]=mpos(e),h=hitBox(mx,my);
   if(h){cv.style.cursor=HANDLE_CURSOR[h[2]+','+h[3]];return}
+  const ch=!$('dragSrc').checked&&!e.ctrlKey&&hitContent(mx,my);
+  if(ch){cv.style.cursor=HANDLE_CURSOR[ch[2]+','+ch[3]];return}
   if(hitGuide(mx,my)){cv.style.cursor='pointer';return}
   const f=cur();
-  if(f&&!playing){const r=frameRect(f),x=wx(mx),y=wy(my);cv.style.cursor=x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1?'move':'default'}
+  if(f&&!playing){const r=frameRect(f),x=wx(mx),y=wy(my),inside=x>=r.x0&&x<=r.x1&&y>=r.y0&&y<=r.y1;cv.style.cursor=inside?($('dragSrc').checked||e.ctrlKey?'grab':'move'):'default'}
 });
 
 // ------------------------------------------------------------------ playback
@@ -1298,9 +1599,9 @@ function tick(t){
 function markPlaying(){[...$('frames').children].forEach((d,i)=>d.classList.toggle('play',playing&&i===playIdx))}
 $('play').onclick=()=>playing?stopPlay():startPlay();
 
-// Snap the content box edges / centre to the cell centre and to line guides.
-function snapFrame(f){
-  const tol=6/V().z,R=contentRect(f),xs=[],ys=[];
+// Snap targets: cell edges and centre, safe margin, export pivot, guides.
+function snapCands(){
+  const xs=[0,S.cellW],ys=[0,S.cellH];
   if(S.showCenter){xs.push(S.cellW/2);ys.push(S.cellH/2)}
   if(S.safe>0){xs.push(S.safe,S.cellW-S.safe);ys.push(S.safe,S.cellH-S.safe)}
   xs.push(S.ex.px*S.cellW);ys.push(S.ex.py*S.cellH);
@@ -1308,6 +1609,13 @@ function snapFrame(f){
     if(g.type==='v')xs.push(g.x);else if(g.type==='h')ys.push(g.y);
     else{const b=gbox(g);xs.push(b.x,b.x+b.w);ys.push(b.y,b.y+b.h)}
   }
+  return{xs,ys};
+}
+// Nearest target within 6 screen px of v, or null.
+function snapOne(v,cands){const tol=6/V().z;let b=null;for(const c of cands){const d=c-v;if(Math.abs(d)<tol&&(!b||Math.abs(d)<Math.abs(b.d)))b={d,v:c}}return b}
+// Snap the content (dashed box), or the blue box when box is set, by its edges or centre.
+function snapFrame(f,box){
+  const tol=6/V().z,R=box?frameRect(f):contentRect(f),{xs,ys}=snapCands();
   const best=(vals,cands)=>{let b=null;for(const v of vals)for(const c of cands){const d=c-v;if(Math.abs(d)<tol&&(!b||Math.abs(d)<Math.abs(b.d)))b={d,v:c}}return b};
   const bx=best([R.x0,R.cx,R.x1],xs),by=best([R.y0,R.cy,R.y1],ys);
   if(bx){f.tx+=bx.d;snapLines.push({axis:'x',v:bx.v})}
@@ -1318,9 +1626,12 @@ function snapFrame(f){
 window.addEventListener('keydown',e=>{
   if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||document.querySelector('dialog[open]'))return;
   if(e.code==='Space'){spaceDown=true;cv.style.cursor='grab';e.preventDefault();return}
-  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();return}
-  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo();return}
+  const onCut=!$('cutGo').closest('[data-pane]').hidden;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();if(onCut&&(e.shiftKey?maskRedoPop():maskUndoPop()))return;e.shiftKey?redo():undo();return}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();if(onCut&&maskRedoPop())return;redo();return}
   if(e.key==='p'||e.key==='P'){playing?stopPlay():startPlay();return}
+  if(e.key==='Escape'&&brushActive()){setBrush('');return}
+  if(e.key==='Escape'&&samActive()){samReset();return}
   const f=cur();if(!f)return;const step=e.shiftKey?10:1;let moved=true;
   switch(e.key){
     case 'ArrowLeft':f.tx-=step;break;case 'ArrowRight':f.tx+=step;break;
@@ -1355,9 +1666,9 @@ function checkerThumb(g,w,h){const dark=effectiveTheme()==='dark';g.fillStyle=da
 function setVal(id,v){const el=$(id);if(document.activeElement!==el)el.value=v}
 function syncFrameInputs(){
   const f=cur(),on=!!f;
-  for(const id of ['fw','fh','cx','cy','cw','ch'])$(id).disabled=!on;
+  for(const id of ['fw','fh','fscale','cx','cy','cw','ch'])$(id).disabled=!on;
   if(!f){$('fsize').textContent='—';return}
-  setVal('fw',Math.round(f.crop.w*f.sx));setVal('fh',Math.round(f.crop.h*f.sy));
+  setVal('fw',Math.round(f.crop.w*f.sx));setVal('fh',Math.round(f.crop.h*f.sy));setVal('fscale',Math.round(f.sx*1000)/10);
   setVal('cx',f.crop.x);setVal('cy',f.crop.y);setVal('cw',f.crop.w);setVal('ch',f.crop.h);
   const R=contentRect(f);
   $('fsize').textContent=T('第 {0} 帧 · 不透明内容（虚线框）{1}×{2} px · 来源 {3}',S.sel,Math.round(R.w),Math.round(R.h),img(f).name);
@@ -1390,9 +1701,24 @@ function exLayout(){
   return{cols,rows,rects,w:2*m+cols*W+(cols-1)*p,h:2*m+rows*H+(rows-1)*p};
 }
 const fmt=v=>+(+v).toFixed(3);
-function syncExport(){
+// Export scale: everything that builds output runs with the cell and frames temporarily scaled, then put back.
+function exScaled(fn){
+  const k=(S.ex.scale||100)/100;if(k===1||exScaled.on)return fn(); // already scaled: don't scale twice
+  exScaled.on=true;
+  const keep={cellW:S.cellW,cellH:S.cellH,f:S.frames.map(f=>[f.sx,f.sy,f.tx,f.ty])};
+  S.cellW=Math.max(1,Math.round(S.cellW*k));S.cellH=Math.max(1,Math.round(S.cellH*k));
+  const kx=S.cellW/keep.cellW,ky=S.cellH/keep.cellH;
+  for(const f of S.frames){f.sx*=kx;f.sy*=ky;f.tx*=kx;f.ty*=ky}
+  const back=()=>{exScaled.on=false;S.cellW=keep.cellW;S.cellH=keep.cellH;S.frames.forEach((f,i)=>{[f.sx,f.sy,f.tx,f.ty]=keep.f[i]})};
+  let r;try{r=fn()}catch(e){back();throw e}
+  if(r&&r.then)return r.finally(back);
+  back();return r;
+}
+function syncExport(){return exScaled(syncExport0)}
+function syncExport0(){
   const n=S.frames.length,E=S.ex,L=exLayout(),W=S.cellW,H=S.cellH;
-  for(const [id,k] of [['exCols','cols'],['exMargin','margin'],['exPad','pad'],['exPx','px'],['exPy','py']])setVal(id,E[k]);
+  for(const [id,k] of [['exCols','cols'],['exMargin','margin'],['exPad','pad'],['exPx','px'],['exPy','py'],['exScale','scale']])setVal(id,E[k]);
+  document.querySelectorAll('#exScaleSeg [data-exs]').forEach(b=>b.classList.toggle('on',+b.dataset.exs===E.scale));
   $('exJson').checked=E.json;$('exTres').checked=E.tres;
   document.querySelectorAll('#exLayout [data-layout]').forEach(b=>b.classList.toggle('on',b.dataset.layout===E.layout));
   $('exColsRow').style.display=E.layout==='grid'?'':'none';
@@ -1406,6 +1732,13 @@ function syncExport(){
       P('<span class="eng">Godot</span> '+T('AnimatedSprite2D 直接载入 .tres；Sprite2D 填 Hframes {0}、Vframes {1}{2}。轴点 = Offset ({3}, {4})。',B(L.cols),B(L.rows),gap?T('（需要边距和间距为 0）'):'',B(fmt((.5-E.px)*W)),B(fmt((.5-E.py)*H))))+
       (E.json||E.tres?P(T('勾了帧数据时，精灵表会和 JSON / .tres 打包成一个 zip。')+(E.tres?' '+T('.tres 和图片要放在 Godot 项目根目录，或打开时按提示重新指定图片。'):'')):'');
   }else $('exBlender').innerHTML='';
+  // animation
+  document.querySelectorAll('#exAnim [data-anim]').forEach(b=>b.classList.toggle('on',b.dataset.anim===E.anim));
+  $('exLoop').checked=E.loop;$('exLossless').checked=E.lossless;$('exMatteOn').checked=E.matteOn;$('exMatte').value=E.matte;
+  $('exLossRow').style.display=E.anim==='webp'?'':'none';$('exMatteRow').style.display=E.anim==='gif'?'':'none';
+  const ms=frameMs(),warn=E.anim==='webp'&&!canWebp()?T('这个浏览器不能生成 WebP（iPhone / Safari），请改用 APNG。'):E.anim==='apng'&&!window.CompressionStream?T('这个浏览器太旧，不能生成 APNG。'):'';
+  $('exAnimInfo').innerHTML=warn?'<p><b>'+warn+'</b></p>':'<p>'+T(E.anim==='gif'?'最多 256 色，透明只有全透 / 不透两档：半透明边缘会有锯齿或白边。勾下面的选项、选成网页背景色，放在同色背景上就看不出来。':E.anim==='webp'?'网页首选：完整透明、文件最小，Chrome / Edge / Safari / 安卓都能播。':'无损、完整透明，所有现代浏览器都能播；文件比 WebP 大。')+'</p><p>'+T('每帧 {0} ms',ms)+(E.anim==='gif'&&ms<20?' · '+T('GIF 每帧最短 20 ms，太快会被浏览器放慢。'):'')+'</p>';
+  $('exAnimGo').disabled=!n||!!warn;
   if(!n||!$('exportDlg').open)return;
   const {canvas}=buildSheet(),c=$('exPrev'),d=window.devicePixelRatio||1,k=Math.min(238/canvas.width,218/canvas.height)*d;
   c.width=Math.max(1,Math.round(canvas.width*k));c.height=Math.max(1,Math.round(canvas.height*k));c.style.width=c.width/d+'px';
@@ -1420,16 +1753,20 @@ function syncExport(){
   for(const y of [0,.5,1])for(const x of [0,.5,1]){const b=document.createElement('button');b.dataset.p=x+','+y;b.title=x+', '+y;b.onclick=()=>{S.ex.px=x;S.ex.py=y;syncExport();draw()};pg.appendChild(b)}
   document.querySelectorAll('#exLayout [data-layout]').forEach(b=>b.onclick=()=>{S.ex.layout=b.dataset.layout;syncExport()});
   const num=(id,k,lo,hi,int)=>$(id).addEventListener('input',()=>{let v=parseFloat($(id).value);if(!isFinite(v))return;v=Math.max(lo,Math.min(hi,int?Math.round(v):v));S.ex[k]=v;syncExport();draw()});
-  num('exCols','cols',1,64,true);num('exMargin','margin',0,256,true);num('exPad','pad',0,256,true);num('exPx','px',0,1);num('exPy','py',0,1);
+  num('exCols','cols',1,64,true);num('exScale','scale',1,1000,true);
+  document.querySelectorAll('#exScaleSeg [data-exs]').forEach(b=>b.onclick=()=>{S.ex.scale=+b.dataset.exs;syncExport()});num('exMargin','margin',0,256,true);num('exPad','pad',0,256,true);num('exPx','px',0,1);num('exPy','py',0,1);
   $('exJson').onchange=e=>{S.ex.json=e.target.checked;syncExport()};
   $('exTres').onchange=e=>{S.ex.tres=e.target.checked;syncExport()};
+  document.querySelectorAll('#exAnim [data-anim]').forEach(b=>b.onclick=()=>{S.ex.anim=b.dataset.anim;syncExport()});
+  for(const [id,k] of [['exLoop','loop'],['exLossless','lossless'],['exMatteOn','matteOn']])$(id).onchange=e=>{S.ex[k]=e.target.checked;syncExport()};
+  $('exMatte').oninput=e=>{S.ex.matte=e.target.value;S.ex.matteOn=true;syncExport()};
 }
 function syncAll(){
   if(S.sel>=S.frames.length)S.sel=S.frames.length-1;if(S.base>=S.frames.length)S.base=Math.max(0,S.frames.length-1);
   setVal('cellW',S.cellW);setVal('cellH',S.cellH);
   renderFrames();syncFrameInputs();renderGuides();syncExport();
   $('undo').disabled=!undoStack.length;$('redo').disabled=!redoStack.length;
-  status(T(S.frames.length?(S.mode==='crop'?'裁剪：拖框的边或角 · 框内拖＝移动 · 框外拖＝重新框选 · 滚轮＝缩放视图':'变换：框内拖＝移动（Alt 不吸附）· 拖角＝等比缩放 · 拖边＝单向拉伸（Shift 反过来）· 滚轮＝缩放视图 · 空格/中键拖＝平移'):'就绪 · 拖入文件或 Ctrl+V 粘贴开始'));
+  status(T(S.frames.length?(S.mode==='crop'?'裁剪：拖框的边或角 · 框内拖＝移动 · 框外拖＝重新框选 · 单击虚框＝切到那一帧 · Shift 拖虚框＝挪那一帧 · 滚轮＝缩放视图':'变换：框内拖＝移动（Alt 不吸附）· 拖角＝等比缩放 · 拖边＝单向拉伸（Shift 反过来）· 虚线框内拖 / 拖它的小方块＝只动内容（外框不动） · 滚轮＝缩放视图 · 空格/中键拖＝平移'):'就绪 · 拖入文件或 Ctrl+V 粘贴开始'));
   $('stFrame').textContent=S.frames.length?(S.sel+1)+' / '+S.frames.length:'—';
   $('stCell').textContent=S.frames.length?S.cellW+'×'+S.cellH:'—';
   $('modDot').hidden=!(dirty&&S.frames.length);
@@ -1442,7 +1779,22 @@ function numInput(id,apply){const el=$(id);el.addEventListener('input',()=>{cons
 // Width / height of the blue box in pixels; the box keeps its centre, so nothing shifts.
 numInput('fw',v=>{const f=cur();if(!f||v<1)return;const k=v/(f.crop.w*f.sx);f.sx*=k;if($('lockRatio').checked)f.sy*=k;syncFrameInputs()});
 numInput('fh',v=>{const f=cur();if(!f||v<1)return;const k=v/(f.crop.h*f.sy);f.sy*=k;if($('lockRatio').checked)f.sx*=k;syncFrameInputs()});
+// Scale as a percentage of the source pixels (100% = 1:1). A stretched frame keeps its stretch.
+function setScale(f,pct){const k=pct/100/f.sx;f.sx*=k;f.sy*=k}
+numInput('fscale',v=>{const f=cur();if(!f||v<1)return;setScale(f,v);setVal('fw',Math.round(f.crop.w*f.sx));setVal('fh',Math.round(f.crop.h*f.sy))});
+document.querySelectorAll('[data-scale]').forEach(b=>b.onclick=()=>{const f=cur();if(!f)return;setScale(f,+b.dataset.scale);commit();syncAll();draw()});
 for(const k of ['cx','cy','cw','ch'])numInput(k,v=>{const f=cur();if(!f)return;const c={...f.crop};c[{cx:'x',cy:'y',cw:'w',ch:'h'}[k]]=v;setCrop(f,c)});
+// Scale the whole cell: canvas size, every frame (size and offset), size boxes and lines, safe margin.
+$('cellScaleGo').onclick=()=>{
+  const k=(+$('cellScale').value||100)/100;if(!S.frames.length||k<=0||k===1)return;
+  const W=Math.max(1,Math.round(S.cellW*k)),H=Math.max(1,Math.round(S.cellH*k));
+  if(W>8192||H>8192){toast(T('图太大（超过 16384 px），请减小格子或调整列数'));return}
+  const kx=W/S.cellW,ky=H/S.cellH;S.cellW=W;S.cellH=H;
+  for(const f of S.frames){f.sx*=kx;f.sy*=ky;f.tx*=kx;f.ty*=ky}
+  for(const g of S.guides){if(g.x!=null)g.x=Math.round(g.x*kx);if(g.y!=null)g.y=Math.round(g.y*ky);if(g.w!=null)g.w=Math.max(2,Math.round(g.w*kx));if(g.h!=null)g.h=Math.max(2,Math.round(g.h*ky))}
+  if(S.safe)S.safe=Math.round(S.safe*Math.min(kx,ky));
+  $('cellScale').value=100;fitView('align');commit();syncAll();renderGuides();toast(T('格子已缩放到 {0}×{1}',W,H));
+};
 numInput('cellW',v=>{if(v>=1)S.cellW=Math.round(v);if(view.align.fit)fitView('align')});
 numInput('cellH',v=>{if(v>=1)S.cellH=Math.round(v);if(view.align.fit)fitView('align')});
 $('gSafe').addEventListener('input',e=>{S.safe=Math.max(0,+e.target.value||0);draw()});
@@ -1457,6 +1809,9 @@ $('pixel').onchange=e=>{S.pixel=e.target.checked;renderFrames();draw()};
 $('refAlpha').oninput=e=>{S.refAlpha=+e.target.value;draw()};
 $('refTop').onchange=e=>{S.refTop=e.target.checked;draw()};
 document.querySelectorAll('[data-align]').forEach(b=>b.onclick=()=>align(b.dataset.align));
+function syncAlignBy(){document.querySelectorAll('#alignBy [data-by]').forEach(b=>b.classList.toggle('on',b.dataset.by===S.alignBy))}
+document.querySelectorAll('#alignBy [data-by]').forEach(b=>b.onclick=()=>{S.alignBy=b.dataset.by;dirty=true;syncAlignBy()});
+syncAlignBy();
 document.querySelectorAll('[data-guide]').forEach(b=>b.onclick=()=>{
   const t=b.dataset.guide,W=S.cellW,H=S.cellH,colors={h:'#36c5ff',v:'#36c5ff',rect:'#c77dff',ellipse:'#7dffb0'};
   const g={type:t,color:colors[t],x:Math.round(W/2),y:Math.round(H/2),w:Math.round(W/2),h:Math.round(H/2)};
@@ -1467,7 +1822,84 @@ const isGif=f=>f.type==='image/gif'||/\.gif$/i.test(f.name);
 const isVideo=f=>/^video\//.test(f.type)||/\.(mp4|webm|mov|m4v|ogv)$/i.test(f.name);
 const isImage=f=>!isGif(f)&&(/^image\//.test(f.type)||/\.(png|jpe?g|webp|bmp|avif)$/i.test(f.name));
 const isProject=f=>/\.json$/i.test(f.name)||f.type==='application/json';
-const imp={files:[],mode:'seq',img:null,gif:null,dur:0};
+const imp={files:[],mode:'seq',how:'even',img:null,gif:null,dur:0};
+
+// ---- sprite sheet slicing: even split / regular grid with offset + gap / one frame per detected sprite
+function gridVals(){const v=id=>Math.max(0,Math.round(+$(id).value||0));return{x:v('gridX'),y:v('gridY'),w:Math.max(1,v('gridW')),h:Math.max(1,v('gridH')),gx:v('gridGX'),gy:v('gridGY')}}
+function setGrid(g){for(const [id,k] of [['gridX','x'],['gridY','y'],['gridW','w'],['gridH','h'],['gridGX','gx'],['gridGY','gy']])$(id).value=g[k];imp.gridFor=imp.img}
+function sheetCells(src){
+  const W=src.naturalWidth||src.width,H=src.naturalHeight||src.height,out=[];
+  if(imp.how==='auto'){const b=blobCells(src);out.push(...b);out.layout={cols:b.cols||b.length,rows:1};return out}
+  if(imp.how==='grid'){
+    // a cell counts when at least half of it is on the image; the part outside is cut off
+    const g=gridVals(),n=(s,o,e,gap)=>Math.max(0,Math.floor((e-o-s/2)/(s+gap))+1);
+    const cols=W-g.x>=g.w/2?n(g.w,g.x,W,g.gx):0,rows=H-g.y>=g.h/2?n(g.h,g.y,H,g.gy):0;
+    for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const x=g.x+c*(g.w+g.gx),y=g.y+r*(g.h+g.gy);out.push({x,y,w:Math.min(g.w,W-x),h:Math.min(g.h,H-y)})}
+    out.layout={cols,rows};return out;
+  }
+  const cols=Math.max(1,+$('sheetCols').value|0),rows=Math.max(1,+$('sheetRows').value|0);
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const x0=Math.round(c*W/cols),x1=Math.round((c+1)*W/cols),y0=Math.round(r*H/rows),y1=Math.round((r+1)*H/rows);out.push({x:x0,y:y0,w:x1-x0,h:y1-y0})}
+  out.layout={cols,rows};return out;
+}
+// Foreground mask: transparent sheets use alpha; opaque ones (JPG on white…) use the corner colour as background.
+const maskCache=new WeakMap();
+function sheetMask(src){
+  if(maskCache.has(src))return maskCache.get(src);
+  const W=src.naturalWidth||src.width,H=src.naturalHeight||src.height,c=document.createElement('canvas');c.width=W;c.height=H;
+  const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(src,0,0);const d=g.getImageData(0,0,W,H).data,m=new Uint8Array(W*H);
+  const corners=[0,W-1,(H-1)*W,H*W-1].map(i=>i*4),clear=corners.some(i=>d[i+3]<16),bg=corners[0];
+  for(let i=0,j=0;j<m.length;i+=4,j++)m[j]=clear?d[i+3]>=16:Math.abs(d[i]-d[bg])+Math.abs(d[i+1]-d[bg+1])+Math.abs(d[i+2]-d[bg+2])>36&&d[i+3]>=16;
+  const out={m,W,H};maskCache.set(src,out);return out;
+}
+// One box per sprite: grow the mask by the merge distance, label connected parts, box each part's real pixels.
+function blobCells(src){
+  const merge=Math.max(0,Math.min(64,Math.round(+$('blobMerge').value||0))),key='b'+merge;
+  const M=sheetMask(src);if(M[key])return M[key];
+  const {m,W,H}=M,r=Math.ceil(merge/2);
+  let grown=m;
+  if(r){ // separable max filter (box dilation)
+    const a=new Uint8Array(W*H),b=new Uint8Array(W*H);
+    for(let y=0;y<H;y++){let run=-1e9;for(let x=0;x<W;x++){if(m[y*W+x])run=x;if(x-run<=r)a[y*W+x]=1}run=1e9;for(let x=W-1;x>=0;x--){if(m[y*W+x])run=x;if(run-x<=r)a[y*W+x]=1}}
+    for(let x=0;x<W;x++){let run=-1e9;for(let y=0;y<H;y++){if(a[y*W+x])run=y;if(y-run<=r)b[y*W+x]=1}run=1e9;for(let y=H-1;y>=0;y--){if(a[y*W+x])run=y;if(run-y<=r)b[y*W+x]=1}}
+    grown=b;
+  }
+  const lab=new Int32Array(W*H),stack=new Int32Array(W*H),boxes=[];let n=0;
+  for(let s=0;s<W*H;s++){if(!grown[s]||lab[s])continue;n++;let top=0;stack[top++]=s;lab[s]=n;
+    while(top){const p=stack[--top],x=p%W,y=(p-x)/W;
+      if(x>0&&grown[p-1]&&!lab[p-1]){lab[p-1]=n;stack[top++]=p-1}if(x<W-1&&grown[p+1]&&!lab[p+1]){lab[p+1]=n;stack[top++]=p+1}
+      if(y>0&&grown[p-W]&&!lab[p-W]){lab[p-W]=n;stack[top++]=p-W}if(y<H-1&&grown[p+W]&&!lab[p+W]){lab[p+W]=n;stack[top++]=p+W}}}
+  const bx=new Map();
+  for(let p=0;p<W*H;p++){if(!m[p])continue;const l=lab[p],x=p%W,y=(p-x)/W;let b=bx.get(l);if(!b){b={x0:x,y0:y,x1:x,y1:y,n:0};bx.set(l,b)}
+    if(x<b.x0)b.x0=x;if(x>b.x1)b.x1=x;if(y<b.y0)b.y0=y;if(y>b.y1)b.y1=y;b.n++}
+  for(const b of bx.values())if(b.n>=4)boxes.push({x:b.x0,y:b.y0,w:b.x1-b.x0+1,h:b.y1-b.y0+1});
+  // reading order: rows by vertical overlap, then left to right
+  boxes.sort((a,b)=>a.y-b.y);const rows=[];
+  for(const b of boxes){const row=rows.find(R=>b.y+b.h/2>=R.y0&&b.y+b.h/2<=R.y1);if(row){row.items.push(b);row.y1=Math.max(row.y1,b.y+b.h)}else rows.push({y0:b.y,y1:b.y+b.h,items:[b]})}
+  const out=rows.flatMap(R=>R.items.sort((a,b)=>a.x-b.x));out.cols=Math.max(1,...rows.map(R=>R.items.length));
+  M[key]=out;return out;
+}
+// Regular grid from the gaps: content runs per axis → pitch (median spacing) and phase; cells centred on the sprites.
+function detectGrid(src){
+  const {m,W,H}=sheetMask(src);
+  const axis=(len,other,has)=>{
+    const on=[];for(let i=0;i<len;i++){let f=0;for(let j=0;j<other&&!f;j++)f=has(i,j);on.push(f)}
+    let segs=[];for(let i=0;i<len;i++)if(on[i]){if(segs.length&&segs.at(-1).e===i-1)segs.at(-1).e=i;else segs.push({s:i,e:i})}
+    if(!segs.length)return null;
+    // join pieces split by small holes inside one sprite
+    const med=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:0},mw=med(segs.map(g=>g.e-g.s+1));
+    segs=segs.reduce((o,g)=>{const l=o.at(-1);if(l&&g.s-l.e-1<Math.max(1,mw*.3))l.e=g.e;else o.push({...g});return o},[]);
+    const cs=segs.map(g=>(g.s+g.e+1)/2);
+    if(cs.length<2){const g=segs[0];return{o:g.s,size:g.e-g.s+1,gap:0,count:1}}
+    const pitch=med(cs.slice(1).map((c,i)=>c-cs[i]));if(pitch<2)return null;
+    const phase=med(cs.map(c=>c-Math.round((c-cs[0])/pitch)*pitch));
+    let size=Math.round(pitch),o=Math.round(phase-pitch/2),gap=0;
+    if(o<0){size=Math.round(pitch+2*o);gap=Math.round(pitch)-size;o=Math.round(phase-size/2)}
+    return{o:Math.max(0,o),size:Math.max(1,size),gap,count:segs.length};
+  };
+  const X=axis(W,H,(x,y)=>m[y*W+x]),Y=axis(H,W,(y,x)=>m[y*W+x]);
+  if(!X||!Y||X.count*Y.count<2)return null;
+  return{x:X.o,y:Y.o,w:X.size,h:Y.size,gx:X.gap,gy:Y.gap};
+}
 function openImport(list){
   let files=[...list];
   const proj=files.find(isProject);if(proj&&files.length===1){openProject(proj);return}
@@ -1516,23 +1948,39 @@ async function loadImportPreview(file){
 function drawImportPreview(){
   const c=$('impPrev'),src=imp.img,sum=$('impSummary');
   const n=imp.files.length,cols=Math.max(1,+$('sheetCols').value|0),rows=Math.max(1,+$('sheetRows').value|0);
-  let w=0,h=0,size='';
+  let w=0,h=0,size='',cells=[];
+  document.querySelectorAll('[data-how-opt]').forEach(o=>o.hidden=!o.dataset.howOpt.split(' ').includes(imp.how));
+  document.querySelectorAll('#sheetHow [data-how]').forEach(b=>b.classList.toggle('on',b.dataset.how===imp.how));
+  c.classList.toggle('grab',imp.mode==='sheet'&&imp.how==='grid');
   if(src){
-    w=src.naturalWidth||src.width;h=src.naturalHeight||src.height;size=w+'×'+h;const k=Math.min(1,258/w,218/h)*(window.devicePixelRatio||1);
-    c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));c.style.width=c.width/(window.devicePixelRatio||1)+'px';
-    const g=c.getContext('2d');checkerThumb(g,c.width,c.height);g.drawImage(src,0,0,c.width,c.height);
+    // small sheets are enlarged (up to 4×, sharp pixels) so the grid can be dragged precisely
+    w=src.naturalWidth||src.width;h=src.naturalHeight||src.height;size=w+'×'+h;const d=window.devicePixelRatio||1,k=Math.min(4,258/w,218/h)*d;
+    c.width=Math.max(1,Math.round(w*k));c.height=Math.max(1,Math.round(h*k));c.style.width=c.width/d+'px';
+    const g=c.getContext('2d');checkerThumb(g,c.width,c.height);g.imageSmoothingEnabled=k<=d;g.drawImage(src,0,0,c.width,c.height);
     if(imp.mode==='sheet'){
-      g.strokeStyle=css('--accent');g.lineWidth=1;g.beginPath();
-      for(let i=1;i<cols;i++){const x=Math.round(i*c.width/cols)+.5;g.moveTo(x,0);g.lineTo(x,c.height)}
-      for(let i=1;i<rows;i++){const y=Math.round(i*c.height/rows)+.5;g.moveTo(0,y);g.lineTo(c.width,y)}
-      g.stroke();
+      cells=sheetCells(src);imp.prevK=k/d;
+      g.strokeStyle=css('--accent');g.fillStyle=css('--accent');g.lineWidth=1;
+      if(imp.how==='even'){g.beginPath();
+        for(let i=1;i<cols;i++){const x=Math.round(i*c.width/cols)+.5;g.moveTo(x,0);g.lineTo(x,c.height)}
+        for(let i=1;i<rows;i++){const y=Math.round(i*c.height/rows)+.5;g.moveTo(0,y);g.lineTo(c.width,y)}
+        g.stroke();
+      }else{
+        // every cell / sprite box; in grid mode the first cell is solid with a resize handle
+        cells.forEach((r,i)=>{g.globalAlpha=i&&imp.how==='grid'?.6:1;g.strokeRect(Math.round(r.x*k)+.5,Math.round(r.y*k)+.5,Math.max(1,Math.round(r.w*k)-1),Math.max(1,Math.round(r.h*k)-1))});
+        g.globalAlpha=1;
+        if(imp.how==='grid'&&cells.length){const r=cells[0],s=5*d;g.fillRect((r.x+r.w)*k-s/2,(r.y+r.h)*k-s/2,s,s)}
+      }
     }
   }
   const B=s=>'<b>'+s+'</b>';
   const sz=size?(LANG==='zh'?'（'+size+'）':' ('+size+')'):'';
   switch(imp.mode){
     case 'seq':sum.innerHTML=n>1?T('{0} 张图，按文件名排序（a9 在 a10 前），每张一帧 → {1} 帧',n,B(n)):T('一张图 = 一帧{0}。<br>它其实是一整张精灵表？切到“精灵表”。',sz);break;
-    case 'sheet':sum.innerHTML=T('每张切成 {0}{1} → 最多 {2} 帧',B(cols+'×'+rows),w&&n===1?T('，每格 {0}',B(Math.round(w/cols)+'×'+Math.round(h/rows))):'',B(cols*rows*n));break;
+    case 'sheet':
+      if(imp.how==='grid'){const L=cells.layout||{cols:0,rows:0};sum.innerHTML=T('按网格：每格 {0}，{1} → {2} 帧',B(gridVals().w+'×'+gridVals().h),B(L.cols+'×'+L.rows),B(cells.length*n))+'<br>'+T('在预览上拖：框内＝移动起点，右下角小方块＝改格子大小。')}
+      else if(imp.how==='auto')sum.innerHTML=src?T('识别出 {0} 块 → {1} 帧；每块一帧，脚底对齐到格子底边。',B(cells.length),B(cells.length)):'';
+      else sum.innerHTML=T('每张切成 {0}{1} → 最多 {2} 帧',B(cols+'×'+rows),w&&n===1?T('，每格 {0}',B(Math.round(w/cols)+'×'+Math.round(h/rows))):'',B(cols*rows*n));
+      break;
     case 'gif':{const t=imp.gif?imp.gif.length:0,s=Math.max(1,+$('gifStep').value|0);sum.innerHTML=imp.gif?T('GIF 共 {0} 帧{1} → 导入 {2} 帧',B(t),sz,B(Math.min(MAX_MOTION_FRAMES,Math.ceil(t/s)))):T('正在读取 GIF…');break}
     case 'video':{
       if(!imp.img){sum.textContent=T('正在读取视频…');break}
@@ -1552,7 +2000,31 @@ async function runImport(){
 $('btnImport').onclick=$('btnImport2').onclick=()=>$('fileAny').click();
 $('fileAny').onchange=e=>{const fs=[...e.target.files];e.target.value='';if(fs.length)openImport(fs)};
 document.querySelectorAll('#impMode [data-mode]').forEach(b=>b.onclick=()=>setImportMode(b.dataset.mode));
-for(const id of ['sheetCols','sheetRows','gifStep','vidFps','vidStart','vidEnd'])$(id).addEventListener('input',drawImportPreview);
+for(const id of ['sheetCols','sheetRows','gifStep','vidFps','vidStart','vidEnd','gridX','gridY','gridW','gridH','gridGX','gridGY','blobMerge'])$(id).addEventListener('input',drawImportPreview);
+document.querySelectorAll('#sheetHow [data-how]').forEach(b=>b.onclick=()=>{
+  imp.how=b.dataset.how;
+  // first time in grid mode for this image: start from the even split
+  if(imp.how==='grid'&&imp.img&&imp.gridFor!==imp.img){const s=imp.img,W=s.naturalWidth||s.width,H=s.naturalHeight||s.height;
+    setGrid({x:0,y:0,w:Math.round(W/Math.max(1,+$('sheetCols').value|0)),h:Math.round(H/Math.max(1,+$('sheetRows').value|0)),gx:0,gy:0})}
+  drawImportPreview();
+});
+$('gridDetect').onclick=()=>{if(!imp.img)return;const g=detectGrid(imp.img);if(g){setGrid(g);drawImportPreview()}else toast(T('没找到规则的网格，试试“逐块识别”'))};
+// Grid mode: drag on the preview. Inside = move the whole grid; the first cell's bottom-right square = cell size.
+{
+  const c=$('impPrev');let drag=null;
+  // scale from the canvas's on-screen size (CSS may shrink it on narrow screens)
+  const at=e=>{const r=c.getBoundingClientRect(),k=r.width/(imp.img.naturalWidth||imp.img.width);imp.prevK=k;return[(e.clientX-r.left)/k,(e.clientY-r.top)/k]};
+  c.addEventListener('pointerdown',e=>{
+    if(imp.mode!=='sheet'||imp.how!=='grid'||!imp.img)return;
+    const [x,y]=at(e),g=gridVals(),tol=(COARSE?14:7)/(imp.prevK||1);
+    drag={x,y,g,size:Math.abs(x-(g.x+g.w))<=tol&&Math.abs(y-(g.y+g.h))<=tol};c.setPointerCapture(e.pointerId);e.preventDefault();
+  });
+  c.addEventListener('pointermove',e=>{
+    if(!drag)return;const [x,y]=at(e),dx=Math.round(x-drag.x),dy=Math.round(y-drag.y),g=drag.g;
+    setGrid(drag.size?{...g,w:Math.max(1,g.w+dx),h:Math.max(1,g.h+dy)}:{...g,x:Math.max(0,g.x+dx),y:Math.max(0,g.y+dy)});drawImportPreview();
+  });
+  const end=()=>{drag=null};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);
+}
 $('impGo').onclick=runImport;
 document.querySelectorAll('dialog [data-close]').forEach(b=>b.onclick=()=>b.closest('dialog').close());
 document.querySelectorAll('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d)d.close()}));
@@ -1624,7 +2096,9 @@ function setTab(t){
   document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===t));
   document.querySelectorAll('[data-pane]').forEach(p=>p.hidden=p.dataset.pane!==t);
   setMode(t==='crop'?'crop':'align');
+  if(t==='cut'){cutStateIdle();samStateIdle()}
 }
+PHONE.addEventListener('change',()=>{if(PHONE.matches&&$('cutGo').closest('[data-pane]').hidden===false)setTab('transform')});
 function setMode(m){stopPlay();S.mode=m;if(view[m].fit)fitView(m);syncAll()}
 $('zFit').onclick=()=>fitView();$('z100').onclick=oneToOne;
 $('undo').onclick=undo;$('redo').onclick=redo;
@@ -1634,7 +2108,7 @@ $('cHome').onclick=()=>{for(const f of cropTargets())setCrop(f,f.home);commit();
 $('cAll').onclick=()=>{const c=cur();if(!c)return;for(const f of S.frames)if(f!==c){const I=img(f),cx=f.crop.x+f.crop.w/2,cy=f.crop.y+f.crop.h/2;setCrop(f,{x:Math.max(0,Math.min(I.w-c.crop.w,cx-c.crop.w/2)),y:Math.max(0,Math.min(I.h-c.crop.h,cy-c.crop.h/2)),w:c.crop.w,h:c.crop.h})}commit();syncAll();toast(T('所有帧的裁剪尺寸已设为 {0}×{1}',c.crop.w,c.crop.h))};
 $('fUp').onclick=()=>moveFrame(-1);$('fDown').onclick=()=>moveFrame(1);
 function moveFrame(d){const i=S.sel,j=i+d;if(i<0||j<0||j>=S.frames.length)return;const a=S.frames;[a[i],a[j]]=[a[j],a[i]];if(S.base===i)S.base=j;else if(S.base===j)S.base=i;S.sel=j;commit();syncAll()}
-$('fDup').onclick=()=>{const f=cur();if(!f)return;const c=JSON.parse(JSON.stringify(f));c.id='f'+(uid++);S.frames.splice(S.sel+1,0,c);if(S.base>S.sel)S.base++;S.sel++;commit();syncAll()};
+$('fDup').onclick=()=>{const f=cur();if(!f)return;const c=JSON.parse(JSON.stringify(f));c.id='f'+(uid++);if(S.masks[f.id])S.masks[c.id]=cloneMask(S.masks[f.id]);S.frames.splice(S.sel+1,0,c);if(S.base>S.sel)S.base++;S.sel++;commit();syncAll()};
 $('fDel').onclick=()=>{if(!cur())return;S.frames.splice(S.sel,1);if(S.base>S.sel)S.base--;if(S.base>=S.frames.length)S.base=0;if(S.sel>=S.frames.length)S.sel=S.frames.length-1;commit();syncAll()};
 $('fBase').onclick=()=>{if(cur()){S.base=S.sel;commit();syncAll();toast(T('第 {0} 帧设为基准',S.sel))}};
 
@@ -1660,7 +2134,7 @@ const frameMs=()=>Math.round(1000/Math.max(1,Math.min(60,+$('fps').value||8)));
 function sheetJson(rects,image,w,h){
   const W=S.cellW,H=S.cellH,frames={},names=frameNames(),ms=frameMs();
   rects.forEach((r,i)=>{frames[names[i]]={frame:{x:r.x,y:r.y,w:W,h:H},rotated:false,trimmed:false,spriteSourceSize:{x:0,y:0,w:W,h:H},sourceSize:{w:W,h:H},pivot:{x:fmt(S.ex.px),y:fmt(S.ex.py)},duration:ms}});
-  const meta={app:'sprite-align (精灵表对齐工具)',version:'1.7',format:'RGBA8888',scale:'1',frameTags:[{name:'default',from:0,to:rects.length-1,direction:'forward'}]};
+  const meta={app:'sprite-align (精灵表对齐工具)',version:'2.0',format:'RGBA8888',scale:'1',frameTags:[{name:'default',from:0,to:rects.length-1,direction:'forward'}]};
   if(image){meta.image=image;meta.size={w,h};meta.margin=S.ex.margin;meta.spacing=S.ex.pad}
   return JSON.stringify({frames,meta},null,2);
 }
@@ -1673,7 +2147,8 @@ function godotTres(image,rects){
   return s;
 }
 const enc=s=>new TextEncoder().encode(s);
-$('exSheet').onclick=async()=>{
+$('exSheet').onclick=()=>exScaled(exportSheet);
+async function exportSheet(){
   if(!S.frames.length)return;const {canvas,cols,rows,rects}=buildSheet();
   // iPhone Safari refuses canvases over ~16.7 megapixels.
   if(canvas.width>16384||canvas.height>16384||(COARSE&&canvas.width*canvas.height>16777216)){toast(T('图太大（超过 16384 px），请减小格子或调整列数'));return}
@@ -1685,13 +2160,14 @@ $('exSheet').onclick=async()=>{
     download(makeZip(files),base+'.zip');
   }else download(png,name);
   dirty=false;toast(T('已导出：横 {0} × 竖 {1}',cols,rows));
-};
-$('exZip').onclick=async()=>{
+}
+$('exZip').onclick=()=>exScaled(exportZip);
+async function exportZip(){
   if(!S.frames.length)return;const files=[],names=frameNames();
   for(let i=0;i<S.frames.length;i++){const b=await toBlob(renderCell(S.frames[i]));files.push({name:names[i],data:new Uint8Array(await b.arrayBuffer())})}
   if(S.ex.json)files.push({name:'frames.json',data:enc(sheetJson(S.frames.map(()=>({x:0,y:0}))))});
   download(makeZip(files),T('表情帧.zip'));dirty=false;toast(T('已导出 {0} 张',S.frames.length));
-};
+}
 // Minimal zip writer (stored, no compression); PNG data is already compressed.
 const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
 function crc32(d){let c=0xFFFFFFFF;for(let i=0;i<d.length;i++)c=CRC[(c^d[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0}
@@ -1712,12 +2188,676 @@ function makeZip(files){
   return new Blob([...parts,...central,end],{type:'application/zip'});
 }
 
+// ------------------------------------------------------------------ animation export (GIF / animated WebP / APNG)
+// All three are written here byte by byte; the browser only supplies still WebP frames and zlib deflate.
+function exDefaults(){return{scale:100,layout:'grid',cols:3,margin:0,pad:0,px:.5,py:.5,json:false,tres:false,anim:canWebp()?'webp':'apng',loop:true,lossless:false,matteOn:false,matte:'#ffffff'}}
+// S is created before this point runs, so the cache lives on the function (a let here would still be in its TDZ).
+function canWebp(){if(canWebp.ok===undefined){const c=document.createElement('canvas');c.width=c.height=1;canWebp.ok=c.toDataURL('image/webp').startsWith('data:image/webp')}return canWebp.ok}
+const yieldUI=()=>new Promise(r=>setTimeout(r));
+const u16be=n=>[n>>8&255,n&255],u32be=n=>[n>>>24&255,n>>16&255,n>>8&255,n&255],u24le=n=>[n&255,n>>8&255,n>>16&255];
+const pixels=c=>c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+const sizeText=n=>n<1048576?Math.max(1,Math.round(n/1024))+' KB':(n/1048576).toFixed(1)+' MB';
+
+// GIF: one shared palette for all frames, so colours don't flicker between frames.
+// Few colours (pixel art) are kept exactly; otherwise median cut on a 5-bit-per-channel histogram.
+function gifPalette(ds){
+  const exact=new Map();let over=false;
+  for(const d of ds){for(let i=0;i<d.length;i+=4){if(!d[i+3])continue;const k=d[i]<<16|d[i+1]<<8|d[i+2];if(!exact.has(k)){if(exact.size>=255){over=true;break}exact.set(k,1)}}if(over)break}
+  if(!over)return[...exact.keys()].map(k=>[k>>16,k>>8&255,k&255]);
+  const hist=new Uint32Array(32768),ch=(k,c)=>c===0?k>>10:c===1?k>>5&31:k&31;
+  for(const d of ds)for(let i=0;i<d.length;i+=4)if(d[i+3])hist[(d[i]>>3)<<10|(d[i+1]>>3)<<5|d[i+2]>>3]++;
+  const boxes=[[]];for(let k=0;k<32768;k++)if(hist[k])boxes[0].push(k);
+  while(boxes.length<255){
+    // split the box with the most pixels × widest channel, at its pixel median
+    let bi=-1,best=0,bc=0;
+    boxes.forEach((b,i)=>{if(b.length<2)return;let n=0;const lo=[31,31,31],hi=[0,0,0];
+      for(const k of b){n+=hist[k];for(let c=0;c<3;c++){const v=ch(k,c);if(v<lo[c])lo[c]=v;if(v>hi[c])hi[c]=v}}
+      const r=[hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]],c=r.indexOf(Math.max(...r)),score=n*(r[c]+1);if(score>best){best=score;bi=i;bc=c}});
+    if(bi<0)break;
+    const b=boxes[bi].sort((x,y)=>ch(x,bc)-ch(y,bc));let tot=0;for(const k of b)tot+=hist[k];
+    let acc=0,cut=1;for(;cut<b.length;cut++){acc+=hist[b[cut-1]];if(acc>=tot/2)break}cut=Math.min(cut,b.length-1);
+    boxes.splice(bi,1,b.slice(0,cut),b.slice(cut));
+  }
+  return boxes.map(b=>{let n=0,r=0,g=0,bl=0;for(const k of b){const w=hist[k];n+=w;r+=w*((k>>10)*8+4);g+=w*((k>>5&31)*8+4);bl+=w*((k&31)*8+4)}return[Math.round(r/n),Math.round(g/n),Math.round(bl/n)]});
+}
+function nearest(pal,r,g,b){let bi=0,bd=Infinity;for(let i=0;i<pal.length;i++){const p=pal[i],dr=p[0]-r,dg=p[1]-g,db=p[2]-b,d=2*dr*dr+4*dg*dg+3*db*db;if(d<bd){bd=d;bi=i;if(!d)break}}return bi}
+function lzwEncode(px,minSize){
+  let buf=new Uint8Array(65536),len=0,cur=0,bits=0;
+  const put=b=>{if(len===buf.length){const nb=new Uint8Array(len*2);nb.set(buf);buf=nb}buf[len++]=b};
+  const clear=1<<minSize,eoi=clear+1;let size=minSize+1,next=eoi+1,dict=new Map();
+  const emit=c=>{cur|=c<<bits;bits+=size;while(bits>=8){put(cur&255);cur>>>=8;bits-=8}};
+  emit(clear);let prefix=px[0];
+  for(let i=1;i<px.length;i++){
+    const k=px[i],key=prefix<<8|k,code=dict.get(key);
+    if(code!==undefined){prefix=code;continue}
+    emit(prefix);
+    if(next<4096){dict.set(key,next++);if(next>1<<size&&size<12)size++}
+    else{emit(clear);dict=new Map();size=minSize+1;next=eoi+1}
+    prefix=k;
+  }
+  emit(prefix);emit(eoi);if(bits>0)put(cur&255);
+  return buf.subarray(0,len);
+}
+async function encodeGif(cv,ms,loop,matte){
+  const W=S.cellW,H=S.cellH,ds=cv.map(pixels);
+  // GIF transparency is on/off: below the threshold → transparent, the rest opaque.
+  // With a matte colour, soft edges are pre-blended onto it, so a low threshold keeps them smooth.
+  const m=matte&&[1,3,5].map(i=>parseInt(matte.slice(i,i+2),16)),th=m?8:128;
+  for(const d of ds)for(let i=0;i<d.length;i+=4){const a=d[i+3];if(a<th){d[i+3]=0;continue}
+    if(m&&a<255){const t=a/255;for(let c=0;c<3;c++)d[i+c]=Math.round(d[i+c]*t+m[c]*(1-t))}d[i+3]=255}
+  const pal=gifPalette(ds),tIdx=pal.length,cache=new Map(),delay=Math.max(2,Math.round(ms/10));
+  const gct=new Uint8Array(768);pal.forEach((p,i)=>gct.set(p,i*3));
+  const parts=[new Uint8Array([71,73,70,56,57,97,W&255,W>>8,H&255,H>>8,0xF7,0,0]),gct];
+  if(loop)parts.push(new Uint8Array([0x21,0xFF,11,...enc('NETSCAPE2.0'),3,1,0,0,0]));
+  for(let f=0;f<ds.length;f++){
+    status(T('正在生成动图 {0} / {1}',f+1,ds.length));
+    const d=ds[f],px=new Uint8Array(W*H);
+    for(let i=0,j=0;j<px.length;i+=4,j++){if(!d[i+3]){px[j]=tIdx;continue}
+      const k=d[i]<<16|d[i+1]<<8|d[i+2];let v=cache.get(k);if(v===undefined){v=nearest(pal,d[i],d[i+1],d[i+2]);cache.set(k,v)}px[j]=v}
+    // graphic control: dispose to background (transparent areas don't keep the previous frame), transparent index
+    parts.push(new Uint8Array([0x21,0xF9,4,(2<<2)|1,delay&255,delay>>8,tIdx,0,0x2C,0,0,0,0,W&255,W>>8,H&255,H>>8,0,8]));
+    const z=lzwEncode(px,8),blk=new Uint8Array(z.length+Math.ceil(z.length/255)+1);let o=0;
+    for(let s=0;s<z.length;s+=255){const n=Math.min(255,z.length-s);blk[o++]=n;blk.set(z.subarray(s,s+n),o);o+=n}
+    blk[o]=0;parts.push(blk);
+    await yieldUI();
+  }
+  parts.push(new Uint8Array([0x3B]));
+  return new Blob(parts,{type:'image/gif'});
+}
+
+// Animated WebP: the browser encodes each frame as a still WebP; its VP8 / VP8L / ALPH chunks go into ANMF frames.
+function riffChunks(u8){const v=new DataView(u8.buffer,u8.byteOffset,u8.byteLength),out=[];
+  for(let o=12;o+8<=u8.length;){const n=v.getUint32(o+4,true);out.push({id:String.fromCharCode(...u8.subarray(o,o+4)),data:u8.subarray(o+8,o+8+n)});o+=8+n+(n&1)}return out}
+function riffChunk(id,parts){const n=parts.reduce((s,p)=>s+p.length,0),out=new Uint8Array(8+n+(n&1));
+  out.set(enc(id));new DataView(out.buffer).setUint32(4,n,true);let o=8;for(const p of parts){out.set(p,o);o+=p.length}return out}
+async function encodeWebp(cv,ms,loop,lossless){
+  const W=S.cellW,H=S.cellH,frames=[];let alpha=false;
+  for(let i=0;i<cv.length;i++){
+    status(T('正在生成动图 {0} / {1}',i+1,cv.length));
+    const b=await new Promise(r=>cv[i].toBlob(r,'image/webp',lossless?1:.9));
+    if(!b||b.type!=='image/webp')throw new Error(T('这个浏览器不能生成 WebP（iPhone / Safari），请改用 APNG。'));
+    const cs=riffChunks(new Uint8Array(await b.arrayBuffer())).filter(c=>c.id==='ALPH'||c.id==='VP8 '||c.id==='VP8L');
+    if(cs.some(c=>c.id!=='VP8 '))alpha=true;
+    // ANMF header: x/2, y/2, w-1, h-1, duration (24-bit each), flags 0x02 = don't blend with the previous frame
+    frames.push(riffChunk('ANMF',[new Uint8Array([0,0,0,0,0,0,...u24le(W-1),...u24le(H-1),...u24le(ms),2]),...cs.map(c=>riffChunk(c.id,[c.data]))]));
+  }
+  const body=[enc('WEBP'),riffChunk('VP8X',[new Uint8Array([0x02|(alpha?0x10:0),0,0,0,...u24le(W-1),...u24le(H-1)])]),
+    riffChunk('ANIM',[new Uint8Array([0,0,0,0,loop?0:1,0])]),...frames];
+  const head=new Uint8Array(8);head.set(enc('RIFF'));new DataView(head.buffer).setUint32(4,body.reduce((s,p)=>s+p.length,0),true);
+  return new Blob([head,...body],{type:'image/webp'});
+}
+
+// APNG: own PNG encoder (RGBA8, adaptive row filters, deflate from CompressionStream) so every frame shares one IHDR.
+function pngChunk(type,data){const out=new Uint8Array(12+data.length),v=new DataView(out.buffer);
+  v.setUint32(0,data.length);out.set(enc(type),4);out.set(data,8);v.setUint32(8+data.length,crc32(out.subarray(4,8+data.length)));return out}
+async function deflate(u8){return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new CompressionStream('deflate'))).arrayBuffer())}
+function pngFilter(d,W,H){
+  const st=W*4,out=new Uint8Array((st+1)*H),tmp=[0,1,2,3].map(()=>new Uint8Array(st));
+  for(let y=0;y<H;y++){
+    const r=y*st,p=r-st;let best=0,bs=Infinity;
+    for(let f=0;f<4;f++){const t=tmp[f];let s=0;  // None, Sub, Up, Paeth — smallest sum of |bytes| wins
+      for(let x=0;x<st;x++){const a=x>=4?d[r+x-4]:0,b=y?d[p+x]:0,c=x>=4&&y?d[p+x-4]:0,v=d[r+x];
+        let o=f===0?v:f===1?v-a:f===2?v-b:(()=>{const pa=Math.abs(b-c),pb=Math.abs(a-c),pc=Math.abs(a+b-2*c);return v-(pa<=pb&&pa<=pc?a:pb<=pc?b:c)})();
+        o&=255;t[x]=o;s+=o<128?o:256-o}
+      if(s<bs){bs=s;best=f}}
+    out[y*(st+1)]=[0,1,2,4][best];out.set(tmp[best],y*(st+1)+1);
+  }
+  return out;
+}
+async function encodeApng(cv,ms,loop){
+  const W=S.cellW,H=S.cellH;let seq=0;
+  const parts=[new Uint8Array([137,80,78,71,13,10,26,10]),pngChunk('IHDR',new Uint8Array([...u32be(W),...u32be(H),8,6,0,0,0])),
+    pngChunk('acTL',new Uint8Array([...u32be(cv.length),...u32be(loop?0:1)]))];
+  for(let i=0;i<cv.length;i++){
+    status(T('正在生成动图 {0} / {1}',i+1,cv.length));
+    const z=await deflate(pngFilter(pixels(cv[i]),W,H));
+    // fcTL: full-frame, delay ms/1000, dispose none, blend source (replace)
+    parts.push(pngChunk('fcTL',new Uint8Array([...u32be(seq++),...u32be(W),...u32be(H),0,0,0,0,0,0,0,0,...u16be(ms),...u16be(1000),0,0])));
+    if(!i)parts.push(pngChunk('IDAT',z));
+    else{const fd=new Uint8Array(4+z.length);fd.set(u32be(seq++));fd.set(z,4);parts.push(pngChunk('fdAT',fd))}
+  }
+  parts.push(pngChunk('IEND',new Uint8Array(0)));
+  return new Blob(parts,{type:'image/png'});
+}
+$('exAnimGo').onclick=async()=>{
+  if(!S.frames.length)return;const E=S.ex,ms=frameMs(),btn=$('exAnimGo');btn.disabled=true;
+  try{
+    const cv=exScaled(()=>S.frames.map(renderCell));
+    const blob=E.anim==='gif'?await encodeGif(cv,ms,E.loop,E.matteOn&&E.matte):E.anim==='webp'?await encodeWebp(cv,ms,E.loop,E.lossless):await encodeApng(cv,ms,E.loop);
+    const name=T('表情动画')+'.'+(E.anim==='apng'?'png':E.anim);
+    download(blob,name);dirty=false;toast(T('已导出 {0}（{1} 帧，{2}）',name,cv.length,sizeText(blob.size)));
+  }catch(e){toast(T('导出失败：{0}',e.message))}
+  finally{status(T('就绪'));btn.disabled=false}
+};
+
+// ------------------------------------------------------------------ AI models (onnxruntime-web; desktop only)
+// Every file listed in models/manifest.json comes from, in this order: this browser's own store (IndexedDB, filled on
+// first use), a models folder the user picked on this computer, models/ next to this page, the copy on the website.
+// Each file is checked against its SHA-256 before it is used or stored. Works from file:// too.
+const MODEL_SITE='https://openc2023.github.io/07tools/sprite-align/models/';
+const MODEL_DIR=/^https?:$/.test(location.protocol)?new URL('models/',location.href).href:null;
+const AI={folder:null,folderName:'',man:null,agreed:false,gpu:false,ort:false};
+const cancelled=()=>Object.assign(new Error(T('已取消')),{cancel:true});
+function idb(){
+  return idb.p||(idb.p=new Promise((ok,bad)=>{const r=indexedDB.open('sprite-align-models',1);
+    r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>ok(r.result);r.onerror=()=>bad(r.error)}).catch(e=>{idb.p=null;throw e}));
+}
+function idbReq(mode,fn){return idb().then(db=>new Promise((ok,bad)=>{const t=db.transaction('files',mode),q=fn(t.objectStore('files'));t.oncomplete=()=>ok(q&&q.result);t.onerror=()=>bad(t.error)})).catch(()=>undefined)}
+const idbGet=k=>idbReq('readonly',o=>o.get(k)),idbHas=k=>idbReq('readonly',o=>o.getKey(k)).then(v=>v!==undefined);
+const idbPut=(k,v)=>idbReq('readwrite',o=>o.put(v,k));
+const fileKey=e=>e.file+'@'+e.sha256.slice(0,16);
+const sha256hex=async b=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',b))].map(v=>v.toString(16).padStart(2,'0')).join('');
+function modelBases(){return[...new Set([MODEL_DIR,MODEL_SITE].filter(Boolean))]}
+async function fetchBytes(url,onBytes){
+  const r=await fetch(url);if(!r.ok)throw new Error(T('下载失败：{0}',r.status+' '+url));
+  const rd=r.body.getReader(),chunks=[];let n=0;
+  for(;;){const {done,value}=await rd.read();if(done)break;chunks.push(value);n+=value.length;onBytes(value.length)}
+  const b=new Uint8Array(n);let o=0;for(const c of chunks){b.set(c,o);o+=c.length}return b;
+}
+async function loadManifest(){
+  if(AI.man)return AI.man;
+  let txt=null;const mf=AI.folder&&AI.folder.get('manifest.json');
+  if(mf)txt=await mf.text();
+  else for(const base of modelBases()){try{const r=await fetch(base+'manifest.json',{cache:'no-cache'});if(r.ok){txt=await r.text();break}}catch(e){}}
+  if(txt)await idbPut('manifest.json',txt);else txt=await idbGet('manifest.json');
+  if(!txt)throw new Error(T('找不到模型文件（models 文件夹）'));
+  return AI.man=JSON.parse(txt);
+}
+// One checked file: from the browser store, else the picked folder, else download.
+async function modelFile(e,onBytes){
+  const key=fileKey(e),hit=await idbGet(key);
+  if(hit){onBytes(e.bytes);return new Uint8Array(await hit.arrayBuffer())}
+  let b=null,err=null;const f=AI.folder&&AI.folder.get(e.file);
+  if(f){b=new Uint8Array(await f.arrayBuffer());onBytes(b.length)}
+  else for(const base of modelBases()){try{b=await fetchBytes(base+e.file,onBytes);break}catch(x){err=x}}
+  if(!b)throw err||new Error(T('找不到模型文件（models 文件夹）'));
+  if(b.length!==e.bytes||await sha256hex(b)!==e.sha256)throw new Error(T('模型文件不完整：{0}',e.file));
+  await idbPut(key,new Blob([b]));return b;
+}
+async function getFiles(ents,say,bar){
+  const total=ents.reduce((s,e)=>s+e.bytes,0),MB=v=>(v/1048576).toFixed(0),out=[];let got=0;
+  for(const e of ents)out.push(await modelFile(e,k=>{got+=k;bar(got/total);say(T('正在加载模型 {0} / {1} MB',MB(got),MB(total)))}));
+  return out;
+}
+// Ask before the first download: from the website (default) or from a models folder on this computer.
+function aiAsk(msg){
+  const d=$('aiDlg');$('aiMsg').textContent=msg;
+  return new Promise(ok=>{let v='cancel';
+    d.querySelectorAll('[data-ai]').forEach(b=>b.onclick=()=>{v=b.dataset.ai;d.close()});
+    d.onclose=()=>ok(v);d.showModal()});
+}
+function pickFolder(){
+  return new Promise((ok,bad)=>{
+    const inp=$('aiFolderInput');inp.value='';
+    inp.oncancel=()=>bad(cancelled());
+    inp.onchange=()=>{
+      const files=[...inp.files],m=files.filter(f=>f.name==='manifest.json').sort((a,b)=>a.webkitRelativePath.length-b.webkitRelativePath.length)[0];
+      if(!m){bad(new Error(T('这个文件夹里没有 manifest.json，请选 models 文件夹')));return}
+      const base=m.webkitRelativePath.slice(0,-'manifest.json'.length);
+      AI.folder=new Map(files.filter(f=>f.webkitRelativePath.startsWith(base)).map(f=>[f.webkitRelativePath.slice(base.length),f]));
+      AI.folderName=base.replace(/\/$/,'')||m.webkitRelativePath;AI.man=null;aiStatus();ok();
+    };
+    inp.click();
+  });
+}
+// Make sure the listed files can be had, asking first when they would have to be downloaded.
+async function aiEnsure(pick){
+  let man=null;try{man=await loadManifest()}catch(e){}
+  if(man&&(AI.folder||AI.agreed))return man;
+  let msg=T('连不上网站，这台电脑上也还没有模型。可以选电脑上的 models 文件夹，或者联网后再试。');
+  if(man){
+    const ents=[man.ort.script,man.ort.mjs,man.ort.wasm,...pick(man)];let miss=0;
+    for(const e of ents)if(!await idbHas(fileKey(e)))miss+=e.bytes;
+    if(!miss)return man;
+    msg=T('AI 功能要先下载模型（约 {0} MB）。只需要一次，之后保存在这个浏览器里，没网也能用。',Math.ceil(miss/1048576));
+  }
+  const v=await aiAsk(msg);
+  if(v==='folder')await pickFolder();else if(v==='site')AI.agreed=true;else throw cancelled();
+  AI.man=null;return loadManifest();
+}
+// Runtime + model files; returns the model buffers. The runtime script, its module and wasm load from memory (blob URLs).
+async function aiFiles(pick,say,bar){
+  const man=await aiEnsure(pick),o=man.ort,bufs=await getFiles([o.script,o.mjs,o.wasm,...pick(man)],say,bar);
+  if(!AI.ort){
+    const blob=(b,t)=>URL.createObjectURL(new Blob([b],{type:t}));
+    if(!window.ort)await loadScript(blob(bufs[0],'text/javascript'));
+    // Both as blob URLs: with wasmBinary instead, the runtime still resolves a path next to the (blob) script and fails.
+    ort.env.wasm.wasmPaths={mjs:blob(bufs[1],'text/javascript'),wasm:blob(bufs[2],'application/wasm')};ort.env.wasm.numThreads=1;
+    try{AI.gpu=!!(navigator.gpu&&await navigator.gpu.requestAdapter())}catch(e){}
+    AI.ort=true;
+  }
+  aiStatus();return bufs.slice(3);
+}
+async function aiStatus(){
+  const el=$('aiStatus');
+  if(AI.folder){el.textContent=T('使用本机文件夹：{0}',AI.folderName);return}
+  let txt=T('还没下载：第一次使用时会先问你。');
+  try{
+    const raw=await idbGet('manifest.json'),man=AI.man||(raw&&JSON.parse(raw));
+    if(man){
+      const all=[man.ort.script,man.ort.mjs,man.ort.wasm,...man.isnet.parts,man.sam.encoder,man.sam.decoder];let have=0;
+      for(const e of all)if(await idbHas(fileKey(e)))have++;
+      if(have===all.length)txt=T('模型已全部保存在这个浏览器里，没网也能用。');else if(have)txt=T('已保存一部分模型，其余的用到时再下载。');
+    }
+  }catch(e){}
+  el.textContent=txt;
+}
+function loadScript(src){return new Promise((ok,bad)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>bad(new Error(T('加载失败：{0}',src)));document.head.appendChild(s)})}
+// WebGPU when the browser has it, otherwise the CPU build.
+async function makeSession(buf,gpu){
+  if(gpu)try{return[await ort.InferenceSession.create(buf,{executionProviders:['webgpu']}),T('显卡加速')]}catch(e){console.warn(e)}
+  return[await ort.InferenceSession.create(buf,{executionProviders:['wasm']}),T('CPU（较慢）')];
+}
+$('aiFolder').onclick=()=>pickFolder().then(()=>toast(T('已选模型文件夹：{0}',AI.folderName)),e=>{if(!e.cancel)toast(e.message)});
+// A zip of the whole models folder, to keep on this computer or copy to one without internet.
+$('aiSave').onclick=async()=>{
+  const btn=$('aiSave');if(btn.disabled)return;btn.disabled=true;
+  try{
+    const pick=m=>[...m.isnet.parts,m.sam.encoder,m.sam.decoder,...(m.extra||[])];
+    const man=await aiEnsure(pick),o=man.ort,ents=[o.script,o.mjs,o.wasm,...pick(man)];
+    const bufs=await getFiles(ents,cutState,cutBar);
+    cutState(T('正在打包…'));await new Promise(r=>setTimeout(r,30));
+    const files=[{name:'models/manifest.json',data:new TextEncoder().encode(JSON.stringify(man,null,1))},...ents.map((e,i)=>({name:'models/'+e.file,data:bufs[i]}))];
+    download(makeZip(files),'sprite-align-models.zip');toast(T('已保存：解压后用“选本机文件夹”选 models'));
+  }catch(e){if(!e.cancel)toast(T('抠图失败：{0}',e.message||e))}
+  finally{btn.disabled=false;cutBar(0);cutStateIdle();aiStatus()}
+};
+
+// ------------------------------------------------------------------ AI cutout (IS-Net)
+// The original stays untouched. Each frame has its own mask (S.masks[frame id]), so frames that share a sprite sheet
+// never affect each other; see frameMask / frameCut below.
+const CUT={session:null,loading:null,man:null,ep:'',busy:false,stop:false};
+function cutBar(p){$('cutBar').firstChild.style.width=(p*100).toFixed(1)+'%'}
+function cutState(s){$('cutState').textContent=s}
+function cutStateIdle(){
+  if(CUT.busy)return;
+  $('cutGo').textContent=T('一键去背景');
+  cutState(CUT.session?T('模型已就绪 · {0}',CUT.ep):T('点“一键去背景”，背景自动变透明。'));
+}
+function cutModel(){
+  if(CUT.session)return Promise.resolve(CUT.session);
+  return CUT.loading||(CUT.loading=(async()=>{
+    const parts=await aiFiles(m=>m.isnet.parts,cutState,cutBar),man=AI.man.isnet;
+    const buf=new Uint8Array(man.bytes);let o=0;for(const p of parts){buf.set(p,o);o+=p.length}
+    cutState(T('正在启动模型…'));
+    [CUT.session,CUT.ep]=await makeSession(buf,AI.gpu);CUT.man=man;return CUT.session;
+  })().catch(e=>{CUT.loading=null;throw e}));
+}
+// Run the model on one crop region; returns a size×size canvas whose alpha is the mask.
+async function cutRegion(I,c){
+  const M=CUT.man,Z=M.size,N=Z*Z,s=CUT.session;
+  const cv=document.createElement('canvas');cv.width=cv.height=Z;
+  const g=cv.getContext('2d',{willReadFrequently:true});g.imageSmoothingQuality='high';
+  g.drawImage(I.el,c.x,c.y,c.w,c.h,0,0,Z,Z);
+  const px=g.getImageData(0,0,Z,Z).data,d=new Float32Array(3*N);
+  for(let i=0;i<N;i++)for(let k=0;k<3;k++)d[k*N+i]=(px[i*4+k]/255-M.mean[k])/M.std[k];
+  const r=await s.run({[M.input]:new ort.Tensor('float32',d,[1,3,Z,Z])}),o=r[s.outputNames[0]].data;
+  const id=g.createImageData(Z,Z);for(let i=0;i<N;i++)id.data[i*4+3]=o[i]*255;
+  g.putImageData(id,0,0);return cv;
+}
+// A frame's mask: {x,y,w,h,c,v} in source-image px; c is an alpha-only canvas (opaque = keep). Outside it = keep.
+// make: create it / grow it so it covers the frame's current crop.
+function frameMask(f,make){
+  let M=S.masks[f.id];const c=f.crop;
+  if(!make)return M||null;
+  if(M&&c.x>=M.x&&c.y>=M.y&&c.x+c.w<=M.x+M.w&&c.y+c.h<=M.y+M.h)return M;
+  const x=M?Math.min(M.x,c.x):c.x,y=M?Math.min(M.y,c.y):c.y,w=(M?Math.max(M.x+M.w,c.x+c.w):c.x+c.w)-x,h=(M?Math.max(M.y+M.h,c.y+c.h):c.y+c.h)-y;
+  const cv2=document.createElement('canvas');cv2.width=w;cv2.height=h;const g=cv2.getContext('2d');g.fillRect(0,0,w,h);
+  if(M){g.clearRect(M.x-x,M.y-y,M.w,M.h);g.drawImage(M.c,M.x-x,M.y-y)}
+  return S.masks[f.id]={x,y,w,h,c:cv2,v:(M?M.v:0)+1};
+}
+function cloneMask(M){const c=document.createElement('canvas');c.width=M.w;c.height=M.h;c.getContext('2d').drawImage(M.c,0,0);return{...M,c,v:M.v+1}}
+const cutCache=new Map();
+function origCanvas(I){
+  if(!I.orig){const o=document.createElement('canvas');o.width=I.w;o.height=I.h;o.getContext('2d',{willReadFrequently:true}).drawImage(I.el,0,0);I.orig=o}
+  return I.orig;
+}
+// What the frame's crop looks like after the cutout: original alpha × mask, then hard edge, edge shrink,
+// small specks removed, edge colours cleaned. Cached per frame; null = draw the original.
+// r (crop px) = only this part changed (brush strokes).
+const SPECKS=[0,10,30,100,300,1000,3000];
+function frameCut(f,r){
+  const M=S.masks[f.id],n=S.cut.shrink|0,sp=SPECKS[S.cut.speck|0]||0,df=!!S.cut.defringe;
+  if(!S.cut.use||(!M&&!n&&!sp&&!df))return null;
+  const c=f.crop,opts=n+'|'+(S.cut.hard?1:0)+'|'+sp+'|'+(df?1:0),base=c.x+','+c.y+','+c.w+','+c.h+'|'+opts,key=base+'|'+(M?M.v:0);
+  let C=cutCache.get(f.id);
+  if(C&&C.key===key&&!r)return C;
+  if(!C||C.width!==c.w||C.height!==c.h||C.base!==base){C=document.createElement('canvas');C.width=c.w;C.height=c.h;r=null}
+  if(sp)r=null; // specks are judged on the whole frame
+  C.key=key;C.base=base;cutCache.set(f.id,C);
+  const rx=r?Math.max(0,Math.floor(r.x)):0,ry=r?Math.max(0,Math.floor(r.y)):0,rx1=r?Math.min(c.w,Math.ceil(r.x+r.w)):c.w,ry1=r?Math.min(c.h,Math.ceil(r.y+r.h)):c.h;
+  if(rx1<=rx||ry1<=ry)return C;
+  // Shrinking and edge colours look a few px around each pixel, so read a margin around the changed part.
+  const mg=n+(df?3:0),x0=Math.max(0,rx-mg),y0=Math.max(0,ry-mg),W=Math.min(c.w,rx1+mg)-x0,H=Math.min(c.h,ry1+mg)-y0;
+  const px=origCanvas(img(f)).getContext('2d',{willReadFrequently:true}).getImageData(c.x+x0,c.y+y0,W,H),d=px.data,a=new Uint8Array(W*H);
+  let m=null;
+  if(M){
+    const t=document.createElement('canvas');t.width=W;t.height=H;const tg=t.getContext('2d',{willReadFrequently:true});
+    tg.fillRect(0,0,W,H);const ox=M.x-(c.x+x0),oy=M.y-(c.y+y0);tg.clearRect(ox,oy,M.w,M.h);tg.drawImage(M.c,ox,oy);
+    m=tg.getImageData(0,0,W,H).data;
+  }
+  const hard=S.cut.hard;
+  for(let i=0;i<W*H;i++){let v=d[i*4+3];if(m)v=v*m[i*4+3]/255;a[i]=hard?(v>=128?255:0):v}
+  if(n)erode(a,W,H,n);
+  if(sp)removeSpecks(a,W,H,sp);
+  for(let i=0;i<W*H;i++)d[i*4+3]=a[i];
+  if(df)defringe(d,W,H);
+  C.getContext('2d').putImageData(px,x0,y0,rx-x0,ry-y0,rx1-rx,ry1-ry);
+  return C;
+}
+// Clear every blob (8-connected, alpha > 16) smaller than min px, and the faint haze below 17.
+function removeSpecks(a,W,H,min){
+  const N=W*H,seen=new Uint8Array(N),stack=new Int32Array(N),blob=new Int32Array(N);
+  for(let i=0;i<N;i++){
+    if(a[i]<=16){a[i]=0;continue}
+    if(seen[i])continue;
+    let sp=0,nb=0;stack[sp++]=i;seen[i]=1;
+    while(sp){
+      const j=stack[--sp];blob[nb++]=j;const x=j%W,y=(j-x)/W;
+      for(let dy=-1;dy<=1;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;
+        for(let dx=-1;dx<=1;dx++){const xx=x+dx;if(xx<0||xx>=W)continue;const k=yy*W+xx;if(!seen[k]&&a[k]>16){seen[k]=1;stack[sp++]=k}}}
+    }
+    if(nb<min)for(let t=0;t<nb;t++)a[blob[t]]=0;
+  }
+}
+// Semi-transparent edge pixels still carry the old background's colour: give them the average colour of the
+// nearly opaque pixels within 3 px (alpha is kept).
+function defringe(d,W,H){
+  const src=new Uint8ClampedArray(d);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+    const i=(y*W+x)*4,al=src[i+3];if(al===0||al>=250)continue;
+    let r=0,g=0,b=0,n=0;
+    for(let dy=-3;dy<=3;dy++){const yy=y+dy;if(yy<0||yy>=H)continue;
+      for(let dx=-3;dx<=3;dx++){const xx=x+dx;if(xx<0||xx>=W)continue;const k=(yy*W+xx)*4;if(src[k+3]>=250){r+=src[k];g+=src[k+1];b+=src[k+2];n++}}}
+    if(n){d[i]=r/n;d[i+1]=g/n;d[i+2]=b/n}
+  }
+}
+// Minimum filter over a (2n+1)² square (van Herk / Gil-Werman, constant time per pixel); outside counts as opaque.
+function erode(a,W,H,n){
+  const k=2*n+1,L=Math.max(W,H)+2*n,b=new Uint8Array(L),g=new Uint8Array(L),h=new Uint8Array(L);
+  const pass=(len,stride,count,step)=>{
+    const T=len+2*n;
+    for(let line=0;line<count;line++){
+      const o=line*step;b.fill(255,0,T);
+      for(let i=0;i<len;i++)b[i+n]=a[o+i*stride];
+      for(let i=0;i<T;i++)g[i]=i%k&&g[i-1]<b[i]?g[i-1]:b[i];
+      for(let i=T-1;i>=0;i--)h[i]=i%k!==k-1&&i<T-1&&h[i+1]<b[i]?h[i+1]:b[i];
+      for(let i=0;i<len;i++){const u=h[i],v=g[i+2*n];a[o+i*stride]=u<v?u:v}
+    }
+  };
+  pass(W,1,H,W);pass(H,W,W,1);
+}
+// Undo for cutout edits (masks are not part of the frame undo): the frames' masks as they were before one action.
+const maskUndo=[];
+const maskRedo=[];
+const maskState=ids=>ids.map(id=>({id,m:S.masks[id]?cloneMask(S.masks[id]):null}));
+function maskSnap(frames){
+  maskUndo.push(maskState([...new Set(frames.map(f=>f.id))]));maskRedo.length=0;
+  if(maskUndo.length>15)maskUndo.shift();
+}
+// Swap the saved masks in, keeping the current ones on the other stack.
+function maskSwap(from,to,msg){
+  const e=from.pop();if(!e)return false;
+  to.push(maskState(e.map(x=>x.id)));
+  for(const {id,m} of e){if(m)S.masks[id]={...m,v:m.v+1000};else delete S.masks[id]}
+  dirty=true;cutChanged();toast(T(msg));return true;
+}
+const maskUndoPop=()=>maskSwap(maskUndo,maskRedo,'已撤销抠图修改'),maskRedoPop=()=>maskSwap(maskRedo,maskUndo,'已重做抠图修改');
+// Draw a crop-size alpha canvas into the frame's mask: replace / add / subtract.
+function maskApply(f,sel,op){
+  const M=frameMask(f,true),g=M.c.getContext('2d'),x=f.crop.x-M.x,y=f.crop.y-M.y;
+  if(op==='replace'){g.clearRect(x,y,f.crop.w,f.crop.h);g.drawImage(sel,0,0,sel.width,sel.height,x,y,f.crop.w,f.crop.h)}
+  else if(op==='add')g.drawImage(sel,0,0,sel.width,sel.height,x,y,f.crop.w,f.crop.h);
+  else{g.globalCompositeOperation='destination-out';g.drawImage(sel,0,0,sel.width,sel.height,x,y,f.crop.w,f.crop.h);g.globalCompositeOperation='source-over'}
+  M.v++;
+}
+function cutChanged(){bboxCache.clear();renderFrames();draw();syncAll()}
+function resetCuts(){cutCache.clear();cutChanged()}
+const cutFrames=()=>$('applyAllCut').checked?S.frames:(cur()?[cur()]:[]);
+// One model run per distinct (image, crop) region; frames that share a region all get the result.
+function cutJobs(){
+  const jobs=new Map();
+  for(const f of cutFrames()){const k=regionKey(f);if(!jobs.has(k))jobs.set(k,{I:img(f),c:{...f.crop},frames:[]});jobs.get(k).frames.push(f)}
+  return[...jobs.values()];
+}
+$('cutGo').onclick=async()=>{
+  if(CUT.busy){CUT.stop=true;return}
+  const jobs=cutJobs();if(!jobs.length){toast(T('还没有帧'));return}
+  stopPlay();CUT.busy=true;CUT.stop=false;$('cutGo').textContent=T('停止');cutBar(0);
+  let n=0;
+  try{
+    await cutModel();
+    maskSnap(jobs.flatMap(j=>j.frames));
+    for(const j of jobs){
+      if(CUT.stop)break;
+      cutState(T('正在抠图 {0} / {1}…',n+1,jobs.length));cutBar(n/jobs.length);
+      const m=await cutRegion(j.I,j.c);
+      for(const f of j.frames)maskApply(f,m,'replace');
+      n++;bboxCache.clear();draw();
+    }
+    cutBar(1);if(n){dirty=true;S.cut.use=true;$('cutUse').checked=true;cutChanged()}
+    toast(T('已抠图 {0} 处',n));
+  }catch(e){cutBar(0);if(!e.cancel)toast(T('抠图失败：{0}',e.message||e))}
+  finally{CUT.busy=false;cutStateIdle()}
+};
+$('cutClear').onclick=()=>{
+  const fs=cutFrames().filter(f=>S.masks[f.id]);if(!fs.length)return;
+  maskSnap(fs);for(const f of fs)delete S.masks[f.id];
+  dirty=true;cutChanged();toast(T('已清除抠图'));
+};
+$('dragSrc').onchange=()=>draw();
+$('cutUse').onchange=()=>{S.cut.use=$('cutUse').checked;dirty=true;resetCuts()};
+$('cutHard').onchange=()=>{S.cut.hard=$('cutHard').checked;dirty=true;resetCuts()};
+$('cutShrink').oninput=()=>{$('cutShrinkV').textContent=$('cutShrink').value+' px'};
+$('cutShrink').onchange=()=>{S.cut.shrink=+$('cutShrink').value;dirty=true;resetCuts()};
+const speckLabel=v=>SPECKS[v]?T('小于 {0} px',SPECKS[v]):T('关');
+$('cutSpeck').oninput=()=>{$('cutSpeckV').textContent=speckLabel(+$('cutSpeck').value)};
+$('cutSpeck').onchange=()=>{S.cut.speck=+$('cutSpeck').value;dirty=true;resetCuts()};
+$('cutDefringe').onchange=()=>{S.cut.defringe=$('cutDefringe').checked;dirty=true;resetCuts()};
+$('brushHard').oninput=()=>{BR.hard=+$('brushHard').value/100;$('brushHardV').textContent=$('brushHard').value+'%'};
+document.querySelectorAll('#cutBg [data-bg]').forEach(b=>b.onclick=()=>{S.cut.bg=b.dataset.bg;syncCutUI();draw()});
+// Cutout controls from S.cut (after opening a project / switching language).
+function syncCutUI(){
+  const C=S.cut;$('cutUse').checked=C.use;$('cutHard').checked=C.hard;$('cutDefringe').checked=!!C.defringe;
+  $('cutShrink').value=C.shrink|0;$('cutShrinkV').textContent=(C.shrink|0)+' px';
+  $('cutSpeck').value=C.speck|0;$('cutSpeckV').textContent=speckLabel(C.speck|0);
+  document.querySelectorAll('#cutBg [data-bg]').forEach(b=>b.classList.toggle('on',b.dataset.bg===(C.bg||'')));
+}
+$('brushSize').oninput=()=>{BR.size=+$('brushSize').value;$('brushSizeV').textContent=BR.size+' px';draw()};
+function loadImg(url){return new Promise(ok=>{const im=new Image();im.onload=()=>ok(im);im.onerror=()=>ok(null);im.src=url})}
+
+// ------------------------------------------------------------------ erase / restore brush (on the current frame's mask only)
+const BR={tool:'',size:30,hard:.8,mouse:null};
+function brushActive(){return!!BR.tool&&!$('brushTool').closest('[data-pane]').hidden&&S.mode==='align'&&!playing&&!PHONE.matches}
+function setBrush(t){
+  BR.tool=t;document.querySelectorAll('#brushTool [data-brush]').forEach(o=>o.classList.toggle('on',!!t&&o.dataset.brush===t));
+  if(t&&SAM.tool)document.querySelector('#samTool [data-sam-tool=""]').click();
+  cv.style.cursor=t?'none':'default';draw();
+}
+document.querySelectorAll('#brushTool [data-brush]').forEach(b=>b.onclick=()=>setBrush(b.dataset.brush));
+// Screen → the current frame's crop px (not clamped).
+function cropPt(f,mx,my){return[(wx(mx)-S.cellW/2-f.tx)/f.sx+f.crop.w/2,(wy(my)-S.cellH/2-f.ty)/f.sy+f.crop.h/2]}
+function brushDab(f,p0,p1){
+  const M=frameMask(f,true),g=M.c.getContext('2d'),c=f.crop,ox=c.x-M.x,oy=c.y-M.y,r=Math.max(.5,BR.size/2/(f.sx*V().z));
+  g.save();g.beginPath();g.rect(ox,oy,c.w,c.h);g.clip();
+  g.globalCompositeOperation=BR.tool==='erase'?'destination-out':'source-over';g.fillStyle=g.strokeStyle='#000';
+  if(BR.hard>=1){
+    g.lineCap='round';g.lineWidth=r*2;
+    g.beginPath();g.moveTo(ox+p0[0],oy+p0[1]);g.lineTo(ox+p1[0],oy+p1[1]);g.stroke();
+    g.beginPath();g.arc(ox+p1[0],oy+p1[1],r,0,Math.PI*2);g.fill();
+  }else{
+    // Soft brush: round dabs fading from the hard core to the rim, close enough together to look continuous.
+    const len=Math.hypot(p1[0]-p0[0],p1[1]-p0[1]),step=Math.max(.5,r/4),k=Math.max(1,Math.ceil(len/step));
+    for(let t=len?1:0;t<=k;t++){
+      const x=ox+p0[0]+(p1[0]-p0[0])*t/k,y=oy+p0[1]+(p1[1]-p0[1])*t/k,gr=g.createRadialGradient(x,y,r*BR.hard,x,y,r);
+      gr.addColorStop(0,'rgba(0,0,0,.35)');gr.addColorStop(1,'rgba(0,0,0,0)');
+      g.fillStyle=gr;g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();
+    }
+  }
+  g.restore();
+  M.v++;
+  frameCut(f,{x:Math.min(p0[0],p1[0])-r-1,y:Math.min(p0[1],p1[1])-r-1,w:Math.abs(p1[0]-p0[0])+2*r+2,h:Math.abs(p1[1]-p0[1])+2*r+2});
+}
+function brushDown(mx,my){
+  const f=cur();maskSnap([f]);
+  if(!S.cut.use){S.cut.use=true;$('cutUse').checked=true;cutCache.clear()}
+  frameCut(f);const p=cropPt(f,mx,my);drag={kind:'brush',last:p};brushDab(f,p,p);bboxCache.clear();draw();
+}
+function brushMarks(){
+  if(!brushActive()||!BR.mouse)return;const [x,y]=BR.mouse;
+  ctx.save();ctx.lineWidth=1.5;ctx.strokeStyle='#000';ctx.beginPath();ctx.arc(x,y,BR.size/2,0,Math.PI*2);ctx.stroke();
+  ctx.strokeStyle=BR.tool==='erase'?'#ef5350':'#39e07a';ctx.setLineDash([4,3]);ctx.stroke();ctx.restore();
+}
+cv.addEventListener('pointermove',e=>{if(brushActive()){BR.mouse=mpos(e);if(!drag)draw()}});
+cv.addEventListener('pointerleave',()=>{if(BR.mouse){BR.mouse=null;draw()}});
+
+// ------------------------------------------------------------------ box / point selection (MobileSAM)
+// Prompts live in the current frame's crop coordinates (source px from the crop's top-left).
+// The encoder runs once per (image, crop) region; each prompt change only re-runs the small decoder.
+const SAM={tool:'',enc:null,dec:null,loading:null,ep:'',emb:new Map(),
+  frameId:null,key:'',points:[],box:null,res:null,pick:0,overlay:null,seq:0,busy:false};
+const regionKey=f=>f.imageId+'|'+f.crop.x+','+f.crop.y+','+f.crop.w+','+f.crop.h;
+function samActive(){return!!SAM.tool&&!$('samTool').closest('[data-pane]').hidden&&S.mode==='align'&&!playing&&!PHONE.matches}
+function samState(s){$('samState').textContent=s}
+function samStateIdle(){
+  if(SAM.loading&&!SAM.enc)return;
+  if(!SAM.tool)return samState(T('选“框选”或“+ 点”，然后在画面上框 / 点。'));
+  if(!SAM.res)return samState(SAM.tool==='box'?T('在画面上拖一个框，圈住要的东西。'):T('点要的部分；右键点＝不要的部分。'));
+  const c=samCands();samState(T('范围 {0} / {1} · 再加点可以修正 · Esc 清空',c.indexOf(SAM.pick)+1,c.length));
+}
+function samModel(){
+  if(SAM.enc)return Promise.resolve();
+  return SAM.loading||(SAM.loading=(async()=>{
+    const [e,d]=await aiFiles(m=>[m.sam.encoder,m.sam.decoder],samState,cutBar);
+    samState(T('正在启动模型…'));
+    [SAM.enc,SAM.ep]=await makeSession(e,AI.gpu);
+    SAM.dec=await ort.InferenceSession.create(d,{executionProviders:['wasm']});
+  })().catch(e=>{SAM.loading=null;throw e}));
+}
+// Image embedding for a frame's crop region (longest side scaled to 1024, as SAM expects).
+async function samEmbed(f){
+  const key=regionKey(f);if(SAM.emb.has(key))return SAM.emb.get(key);
+  const c=f.crop,k=1024/Math.max(c.w,c.h),W=Math.max(1,Math.round(c.w*k)),H=Math.max(1,Math.round(c.h*k));
+  const cv2=document.createElement('canvas');cv2.width=W;cv2.height=H;
+  const g=cv2.getContext('2d',{willReadFrequently:true});g.imageSmoothingQuality='high';g.drawImage(img(f).el,c.x,c.y,c.w,c.h,0,0,W,H);
+  const px=g.getImageData(0,0,W,H).data,inp=new Float32Array(W*H*3);
+  for(let i=0;i<W*H;i++){inp[i*3]=px[i*4];inp[i*3+1]=px[i*4+1];inp[i*3+2]=px[i*4+2]}
+  const r=await SAM.enc.run({input_image:new ort.Tensor('float32',inp,[H,W,3])});
+  const e={emb:r.image_embeddings,k};SAM.emb.set(key,e);
+  if(SAM.emb.size>6)SAM.emb.delete(SAM.emb.keys().next().value);
+  return e;
+}
+// Run the decoder for prompts given in this frame's crop coordinates. Returns 4 candidate masks (logits, crop size).
+async function samDecode(f,points,box){
+  const {emb,k}=await samEmbed(f),pts=points.map(p=>[p[0],p[1],p[2]]);
+  if(box)pts.push([box[0],box[1],2],[box[2],box[3],3]);else pts.push([0,0,-1]);
+  const n=pts.length,r=await SAM.dec.run({image_embeddings:emb,
+    point_coords:new ort.Tensor('float32',Float32Array.from(pts.flatMap(p=>[p[0]*k,p[1]*k])),[1,n,2]),
+    point_labels:new ort.Tensor('float32',Float32Array.from(pts.map(p=>p[2])),[1,n]),
+    mask_input:new ort.Tensor('float32',new Float32Array(256*256),[1,1,256,256]),
+    has_mask_input:new ort.Tensor('float32',[0],[1]),
+    orig_im_size:new ort.Tensor('float32',[f.crop.h,f.crop.w],[2])});
+  return{masks:r.masks.data,iou:[...r.iou_predictions.data],w:f.crop.w,h:f.crop.h};
+}
+// One click → masks 1–3 are small / medium / large; boxes and several points → mask 0 is the answer.
+function samCands(){return SAM.points.length===1&&!SAM.box?[1,2,3]:[0,1,2,3]}
+function samBest(res){const c=samCands();return c.length===3?c.reduce((a,b)=>res.iou[b]>res.iou[a]?b:a):0}
+// Crop-size canvas whose alpha is the selection (soft edge from the logits).
+function samMaskCanvas(res,idx,tint){
+  const {w,h}=res,N=w*h,off=idx*N,c=document.createElement('canvas');c.width=w;c.height=h;
+  const g=c.getContext('2d'),id=g.createImageData(w,h),d=id.data,m=res.masks;
+  for(let i=0;i<N;i++){const a=1/(1+Math.exp(-m[off+i]*2));if(tint){d[i*4]=57;d[i*4+1]=224;d[i*4+2]=122;d[i*4+3]=a*110}else d[i*4+3]=a*255}
+  g.putImageData(id,0,0);return c;
+}
+function samReset(){SAM.points=[];SAM.box=null;SAM.res=null;SAM.overlay=null;SAM.frameId=null;SAM.seq++;samStateIdle();draw()}
+// Prompts belong to one frame and one crop; start over when either changed.
+function samFor(f){const key=regionKey(f);if(SAM.frameId!==f.id||SAM.key!==key){samReset();SAM.frameId=f.id;SAM.key=key}}
+async function samRun(){
+  const f=cur();if(!f||(!SAM.points.length&&!SAM.box)){samReset();return}
+  const seq=++SAM.seq;
+  try{
+    await samModel();if(seq!==SAM.seq)return;
+    samState(T('正在识别…'));
+    const res=await samDecode(f,SAM.points,SAM.box);if(seq!==SAM.seq)return;
+    SAM.res=res;SAM.pick=samBest(res);SAM.overlay=samMaskCanvas(res,SAM.pick,true);
+  }catch(e){if(!e.cancel)toast(T('抠图失败：{0}',e.message||e))}
+  if(seq===SAM.seq){cutBar(0);samStateIdle();draw()}
+}
+// Screen ↔ crop coordinates of the current frame.
+function samSrc(f,mx,my){
+  const u=(wx(mx)-S.cellW/2-f.tx)/f.sx+f.crop.w/2,v=(wy(my)-S.cellH/2-f.ty)/f.sy+f.crop.h/2;
+  return[Math.max(0,Math.min(f.crop.w,u)),Math.max(0,Math.min(f.crop.h,v))];
+}
+function samScr(f,u,v){return[sx_(S.cellW/2+f.tx+(u-f.crop.w/2)*f.sx),sy_(S.cellH/2+f.ty+(v-f.crop.h/2)*f.sy)]}
+function samDown(e,mx,my){
+  const f=cur();samFor(f);const [u,v]=samSrc(f,mx,my);
+  if(SAM.tool==='box'&&e.button===0){drag={kind:'samBox',u0:u,v0:v,u1:u,v1:v,mx,my};return}
+  const neg=SAM.tool==='sub'?e.button!==2&&!e.altKey:e.button===2||e.altKey;
+  SAM.points.push([u,v,neg?0:1]);samRun();
+}
+function samBoxEnd(d,mx,my){
+  if(Math.hypot(mx-d.mx,my-d.my)<5){SAM.points.push([d.u0,d.v0,1]);samRun();return}
+  SAM.box=[Math.min(d.u0,d.u1),Math.min(d.v0,d.v1),Math.max(d.u0,d.u1),Math.max(d.v0,d.v1)];samRun();
+}
+// Inside drawAlign's cell transform: the green selection over the current frame.
+function samOverlay(g,f){
+  if(!samActive()||!SAM.overlay||SAM.frameId!==f.id||SAM.key!==regionKey(f))return;
+  const w=f.crop.w*f.sx,h=f.crop.h*f.sy;
+  g.save();g.imageSmoothingEnabled=!S.pixel;g.drawImage(SAM.overlay,S.cellW/2+f.tx-w/2,S.cellH/2+f.ty-h/2,w,h);g.restore();
+}
+// Screen space: the box being dragged / the prompts.
+function samMarks(){
+  const f=cur();if(!samActive()||!f)return;
+  ctx.save();ctx.lineWidth=1.5;ctx.setLineDash([5,3]);ctx.strokeStyle='#39e07a';
+  const b=drag&&drag.kind==='samBox'?[Math.min(drag.u0,drag.u1),Math.min(drag.v0,drag.v1),Math.max(drag.u0,drag.u1),Math.max(drag.v0,drag.v1)]:SAM.frameId===f.id?SAM.box:null;
+  if(b){const [x0,y0]=samScr(f,b[0],b[1]),[x1,y1]=samScr(f,b[2],b[3]);ctx.strokeRect(x0,y0,x1-x0,y1-y0)}
+  ctx.setLineDash([]);
+  if(SAM.frameId===f.id)for(const [u,v,l] of SAM.points){
+    const [x,y]=samScr(f,u,v);ctx.beginPath();ctx.arc(x,y,6,0,Math.PI*2);ctx.fillStyle=l?'#39e07a':'#ef5350';ctx.fill();
+    ctx.strokeStyle='#fff';ctx.stroke();ctx.beginPath();ctx.moveTo(x-3,y);ctx.lineTo(x+3,y);if(l){ctx.moveTo(x,y-3);ctx.lineTo(x,y+3)}ctx.stroke();
+  }
+  ctx.restore();
+}
+document.querySelectorAll('#samTool [data-sam-tool]').forEach(b=>b.onclick=async()=>{
+  SAM.tool=b.dataset.samTool;if(SAM.tool&&BR.tool)setBrush('');
+  document.querySelectorAll('#samTool [data-sam-tool]').forEach(o=>o.classList.toggle('on',o===b&&!!SAM.tool));
+  cv.style.cursor=SAM.tool?'crosshair':'default';samStateIdle();draw();
+  if(SAM.tool&&!SAM.enc)try{await samModel();cutBar(0);samStateIdle()}catch(e){cutBar(0);if(e.cancel){SAM.tool='';document.querySelectorAll('#samTool [data-sam-tool]').forEach(o=>o.classList.remove('on'));cv.style.cursor='default';samStateIdle()}else samState(e.message||String(e))}
+});
+$('samNext').onclick=()=>{
+  if(!SAM.res)return;const c=samCands();SAM.pick=c[(c.indexOf(SAM.pick)+1)%c.length];
+  SAM.overlay=samMaskCanvas(SAM.res,SAM.pick,true);samStateIdle();draw();
+};
+$('samClear').onclick=samReset;
+cv.addEventListener('contextmenu',e=>{if(samActive()||brushActive())e.preventDefault()});
+document.querySelectorAll('[data-sam-apply]').forEach(b=>b.onclick=async()=>{
+  const f0=cur();if(!f0||!SAM.res||SAM.frameId!==f0.id||SAM.busy)return;
+  const op=b.dataset.samApply,pick=SAM.pick,frames=$('samAll').checked?S.frames:[f0];
+  SAM.busy=true;let n=0;maskSnap(frames);
+  try{
+    for(const f of frames){
+      samState(T('正在抠图 {0} / {1}…',n+1,frames.length));
+      let res=SAM.res;
+      if(f!==f0){
+        // Same prompts at the same relative place in the other frame's crop.
+        const kx=f.crop.w/f0.crop.w,ky=f.crop.h/f0.crop.h,sc=p=>[p[0]*kx,p[1]*ky];
+        res=await samDecode(f,SAM.points.map(p=>[...sc(p),p[2]]),SAM.box&&[...sc(SAM.box),...sc(SAM.box.slice(2))]);
+      }
+      maskApply(f,samMaskCanvas(res,pick,false),op);n++;
+    }
+    dirty=true;S.cut.use=true;$('cutUse').checked=true;cutChanged();
+    toast(T('已应用到 {0} 帧',n));
+  }catch(e){console.error(e);toast(T('抠图失败：{0}',e.message||e))}
+  finally{SAM.busy=false;samReset()}
+});
+
 // ------------------------------------------------------------------ project file
 $('btnSave').onclick=()=>{
   const used=new Set(S.frames.map(f=>f.imageId));if(S.refId)used.add(S.refId);
   const data={app:'精灵表对齐工具',version:1,cellW:S.cellW,cellH:S.cellH,frames:S.frames,guides:S.guides,base:S.base,
-    settings:{showCenter:S.showCenter,safe:S.safe,refId:S.refId,refAlpha:S.refAlpha,refTop:S.refTop,pixel:S.pixel,cols:S.ex.cols,export:S.ex},
-    images:[...used].map(id=>({id,name:S.images[id].name,dataURL:S.images[id].dataURL}))};
+    settings:{alignBy:S.alignBy,showCenter:S.showCenter,safe:S.safe,refId:S.refId,refAlpha:S.refAlpha,refTop:S.refTop,pixel:S.pixel,cols:S.ex.cols,export:S.ex,cut:S.cut},
+    images:[...used].map(id=>({id,name:S.images[id].name,dataURL:S.images[id].dataURL})),
+    masks:S.frames.filter(f=>S.masks[f.id]).map(f=>{const M=S.masks[f.id];return{frame:f.id,x:M.x,y:M.y,w:M.w,h:M.h,data:M.c.toDataURL('image/png')}})};
   download(new Blob([JSON.stringify(data)],{type:'application/json'}),T('表情对齐工程.json'));dirty=false;toast(T('工程已保存（图片也在里面）'));
 };
 $('btnOpen').onclick=()=>$('fileProj').click();
@@ -1726,11 +2866,17 @@ async function openProject(file){
   try{
     const o=JSON.parse(await file.text());if(o.app!=='精灵表对齐工具')throw new Error(T('不是本工具的工程文件'));
     S.images={};bboxCache.clear();
+    const s=o.settings||{};S.cut={use:true,hard:false,shrink:0,speck:0,defringe:false,bg:'',...(s.cut||{})};syncCutUI();
     for(const im of o.images)await addImage(im.name,im.dataURL,im.id);
     Object.assign(S,{cellW:o.cellW,cellH:o.cellH,frames:o.frames,guides:o.guides||[],base:o.base||0,sel:o.frames.length?0:-1,selGuide:-1});
-    const s=o.settings||{};Object.assign(S,{showCenter:s.showCenter!==false,safe:s.safe||0,refId:s.refId||null,refAlpha:s.refAlpha||.4,refTop:!!s.refTop,pixel:!!s.pixel});
+    S.masks={};cutCache.clear();maskUndo.length=maskRedo.length=0;
+    for(const m of o.masks||[]){const im=await loadImg(m.data);if(!im)continue;const c=document.createElement('canvas');c.width=m.w;c.height=m.h;c.getContext('2d').drawImage(im,0,0);S.masks[m.frame]={x:m.x,y:m.y,w:m.w,h:m.h,c,v:1}}
+    // Projects from before v2.0's per-frame masks kept one mask per source image: give each frame its part of it.
+    for(const im of o.images)if(im.mask){const mi=await loadImg(im.mask);if(!mi)continue;
+      for(const f of S.frames)if(f.imageId===im.id){const M=frameMask(f,true),g=M.c.getContext('2d');g.clearRect(0,0,M.w,M.h);g.drawImage(mi,-M.x,-M.y);M.v++}}
+    Object.assign(S,{alignBy:s.alignBy||'box',showCenter:s.showCenter!==false,safe:s.safe||0,refId:s.refId||null,refAlpha:s.refAlpha||.4,refTop:!!s.refTop,pixel:!!s.pixel});syncAlignBy();
     $('gCenter').checked=S.showCenter;$('gSafe').value=S.safe;$('refAlpha').value=S.refAlpha;$('refTop').checked=S.refTop;$('pixel').checked=S.pixel;
-    S.ex={layout:'grid',cols:3,margin:0,pad:0,px:.5,py:.5,json:false,tres:false,...(s.cols?{cols:s.cols}:{}),...(s.export||{})};
+    S.ex={...exDefaults(),...(s.cols?{cols:s.cols}:{}),...(s.export||{})};
     for(const id of Object.keys(S.images)){const n=+id.slice(1);if(n>=uid)uid=n+1}
     for(const f of S.frames){const n=+f.id.slice(1);if(n>=uid)uid=n+1}
     undoStack.length=redoStack.length=0;lastSnap=null;commit();dirty=false;syncAll();fitView('align');toast(T('已打开：{0} 帧',S.frames.length));
@@ -1738,7 +2884,7 @@ async function openProject(file){
 }
 
 document.querySelectorAll('#lang [data-lang]').forEach(b=>b.onclick=()=>setLang(b.dataset.lang));
-translatePage();$('play').textContent=T('▶ 播放');
+translatePage();$('play').textContent=T('▶ 播放');cutStateIdle();samStateIdle();aiStatus();syncCutUI();
 new ResizeObserver(resize).observe($('stage'));
 commit();syncAll();
 </script>

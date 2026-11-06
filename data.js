@@ -3,18 +3,18 @@ window.TOOLS = [
   {
     slug: "sprite-align",
     name: "Sprite Align",
-    ver: "v1.7",
+    ver: "v2.0",
     updated: "2026-11",
-    tags: ["2D", "sprite", "gif", "video", "blender", "unity", "godot"],
+    tags: ["2D", "sprite", "AI cutout", "gif", "video", "blender", "unity", "godot"],
     desc: {
-      zh: "把序列帧、精灵表、GIF 或视频逐帧对齐，再导出成整齐的精灵表。",
-      en: "Align image sequences, sprite sheets, GIFs or video frame by frame, then export a clean sprite sheet.",
-      ko: "시퀀스·스프라이트 시트·GIF·영상을 프레임별로 정렬한 뒤 깔끔한 스프라이트 시트로 내보냅니다."
+      zh: "把序列帧、精灵表、GIF 或视频逐帧对齐，用本地 AI 一键去背景或框选抠图，再导出成整齐的精灵表。",
+      en: "Align image sequences, sprite sheets, GIFs or video frame by frame, remove backgrounds with on-device AI, then export a clean sprite sheet.",
+      ko: "시퀀스·스프라이트 시트·GIF·영상을 프레임별로 정렬하고 로컬 AI로 배경을 지운 뒤 깔끔한 스프라이트 시트로 내보냅니다."
     },
     features: {
-      zh: ["导入序列帧、精灵表、GIF、视频", "逐帧位移与轴点对齐", "导出网格 / 横条 / 竖条，可设外边距、间距、轴点", "附带 TexturePacker JSON 与 Godot .tres", "内置 Blender / Unity / Godot 填写说明"],
-      en: ["Import sequences, sprite sheets, GIFs and video", "Per-frame offset and pivot alignment", "Export as grid / row / column with margin, spacing and pivot", "Optional TexturePacker JSON and Godot .tres", "Built-in setup notes for Blender, Unity and Godot"],
-      ko: ["시퀀스·스프라이트 시트·GIF·영상 가져오기", "프레임별 이동과 피벗 정렬", "그리드 / 가로 / 세로 내보내기, 여백·간격·피벗 설정", "TexturePacker JSON과 Godot .tres 동시 출력", "Blender / Unity / Godot 설정 안내 내장"]
+      zh: ["导入序列帧、精灵表、GIF、视频", "逐帧位移与轴点对齐", "AI 一键去背景（IS-Net）、框选 / 点选抠图（MobileSAM），可修边、擦除 / 恢复", "导出网格 / 横条 / 竖条，可设外边距、间距、轴点", "附带 TexturePacker JSON 与 Godot .tres", "内置 Blender / Unity / Godot 填写说明"],
+      en: ["Import sequences, sprite sheets, GIFs and video", "Per-frame offset and pivot alignment", "AI background removal (IS-Net) and box / point cutout (MobileSAM), with edge cleanup and erase / restore brush", "Export as grid / row / column with margin, spacing and pivot", "Optional TexturePacker JSON and Godot .tres", "Built-in setup notes for Blender, Unity and Godot"],
+      ko: ["시퀀스·스프라이트 시트·GIF·영상 가져오기", "프레임별 이동과 피벗 정렬", "AI 배경 제거(IS-Net)와 박스 / 점 누끼(MobileSAM), 가장자리 정리와 지우기 / 복원 브러시", "그리드 / 가로 / 세로 내보내기, 여백·간격·피벗 설정", "TexturePacker JSON과 Godot .tres 동시 출력", "Blender / Unity / Godot 설정 안내 내장"]
     }
   }
 ];

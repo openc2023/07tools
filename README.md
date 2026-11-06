@@ -6,7 +6,7 @@ STUDIO 7 的离线小工具集合：https://openc2023.github.io/07tools/
 
 | 工具 | 路径 | 版本 |
 | --- | --- | --- |
-| Sprite Align | `sprite-align/` | v1.7 |
+| Sprite Align | `sprite-align/` | v2.0 |
 
 ## 新增工具
 

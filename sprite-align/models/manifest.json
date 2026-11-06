@@ -1,0 +1,104 @@
+{
+ "isnet": {
+  "name": "IS-Net general-use (DIS)",
+  "file": "isnet",
+  "parts": [
+   {
+    "file": "isnet/part-00.bin",
+    "bytes": 41943040,
+    "sha256": "34a424249254f8806bcab081f33aabe5f4b240e24e5cd338f24ce7564234ad2e"
+   },
+   {
+    "file": "isnet/part-01.bin",
+    "bytes": 41943040,
+    "sha256": "d56930c1d5cbfebe42a39eb24135dd38dfc11f6da46024b24826db052dd67030"
+   },
+   {
+    "file": "isnet/part-02.bin",
+    "bytes": 41943040,
+    "sha256": "f1f677e9bab849f23ec48a1489724a211b92217e01461ef288b1bdb1c32b4907"
+   },
+   {
+    "file": "isnet/part-03.bin",
+    "bytes": 41943040,
+    "sha256": "68d240cebcc826ab794b69ff09545aef9ce05ad2a5119e5f0ca8c57d64b814d2"
+   },
+   {
+    "file": "isnet/part-04.bin",
+    "bytes": 10875848,
+    "sha256": "485b5271a48086756737dfc8a0e625a4c4d597636d8f854c82ec2e2bcd4d6a2a"
+   }
+  ],
+  "bytes": 178648008,
+  "sha256": "60920e99c45464f2ba57bee2ad08c919a52bbf852739e96947fbb4358c0d964a",
+  "input": "input_image",
+  "size": 1024,
+  "mean": [
+   0.5,
+   0.5,
+   0.5
+  ],
+  "std": [
+   1,
+   1,
+   1
+  ],
+  "ort": "onnxruntime-web 1.23.2",
+  "sources": {
+   "model": "https://github.com/danielgatis/rembg/releases/download/v0.0.0/isnet-general-use.onnx",
+   "project": "https://github.com/xuebinqin/DIS",
+   "ort": "https://www.npmjs.com/package/onnxruntime-web/v/1.23.2"
+  },
+  "licenses": {
+   "model": "Apache-2.0 (DIS / IS-Net, Xuebin Qin et al.)",
+   "ort": "MIT (Microsoft)"
+  }
+ },
+ "sam": {
+  "name": "MobileSAM (encoder) + SAM mask decoder (multi)",
+  "encoder": {
+   "file": "sam/encoder.onnx",
+   "bytes": 28157093,
+   "sha256": "580f5fb648ea1062c0aabc26217aed56921985f03f0cbbd852bba81d760cc749"
+  },
+  "decoder": {
+   "file": "sam/decoder.onnx",
+   "bytes": 16496559,
+   "sha256": "8976b90a87ba50a6a72217a5ff994f7d25ce16f2229fcc1ed259e1294c622ffe"
+  },
+  "size": 1024,
+  "sources": {
+   "onnx": "https://huggingface.co/Acly/MobileSAM",
+   "project": "https://github.com/ChaoningZhang/MobileSAM"
+  },
+  "licenses": {
+   "onnx": "MIT (Acly/MobileSAM)",
+   "weights": "Apache-2.0 (MobileSAM, Segment Anything)"
+  }
+ },
+ "ort": {
+  "version": "1.23.2",
+  "script": {
+   "file": "ort/ort.webgpu.min.js",
+   "bytes": 66329,
+   "sha256": "c94f5bb9c17bd37168e9b4220facb2b6fc1dd125a5e91b7a680171840a27f254"
+  },
+  "mjs": {
+   "file": "ort/ort-wasm-simd-threaded.asyncify.mjs",
+   "bytes": 51913,
+   "sha256": "249b4dc791f081d33bd11760bfd669fe85f97289e679bbeb291b874272125dff"
+  },
+  "wasm": {
+   "file": "ort/ort-wasm-simd-threaded.asyncify.wasm",
+   "bytes": 25499390,
+   "sha256": "babec0bbddb6d3082623b99b7e1391b75e0729bcca076ff8424d7753af97fada"
+  }
+ },
+ "extra": [
+  {
+   "file": "LICENSES.txt",
+   "bytes": 1034,
+   "sha256": "2752307b4ed68cfbc0726bd61a4317ca4a99cdc42b0068faa9e7923382ca203d"
+  }
+ ]
+}
